@@ -2,7 +2,7 @@
   "name": "Fit Plan – Bryan",
   "short_name": "Fit Plan",
   "description": "Personal workout and diet plan",
-  "start_url": "/",
+  "start_url": "/fitplan/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1D9E75",
