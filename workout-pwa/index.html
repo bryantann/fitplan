@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fit Plan">
+  <meta name="theme-color" content="#1D9E75">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Fit Plan</title>
+  <style>
+    :root {
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --green-dark: #085041;
+      --green-mid: #0F6E56;
+      --blue-light: #E6F1FB;
+      --blue-dark: #0C447C;
+      --amber-light: #FAEEDA;
+      --amber-dark: #633806;
+      --purple-light: #EEEDFE;
+      --purple-dark: #3C3489;
+      --bg: #ffffff;
+      --bg2: #f7f7f5;
+      --bg3: #f0eeea;
+      --text: #1a1a1a;
+      --text2: #6b6b6b;
+      --border: rgba(0,0,0,0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --bg2: #242424;
+        --bg3: #2e2e2e;
+        --text: #f0f0f0;
+        --text2: #999;
+        --border: rgba(255,255,255,0.12);
+        --green-light: #0a3d2a;
+        --green-dark: #5DCAA5;
+        --blue-light: #0a1e3a;
+        --blue-dark: #85B7EB;
+        --amber-light: #2e1f05;
+        --amber-dark: #EF9F27;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; }
+
+    /* NAV */
+    .nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 0.5px solid var(--border); padding: env(safe-area-inset-top) 0 0; }
+    .nav-inner { display: flex; align-items: center; gap: 10px; padding: 14px 16px; }
+    .nav-icon { width: 32px; height: 32px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-icon svg { width: 18px; height: 18px; fill: white; }
+    .nav-title { font-size: 17px; font-weight: 600; color: var(--text); }
+    .nav-sub { font-size: 12px; color: var(--text2); }
+
+    /* BOTTOM TABS */
+    .bottom-tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 0.5px solid var(--border); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+    .btab { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; cursor: pointer; border: none; background: none; color: var(--text2); font-family: inherit; gap: 3px; }
+    .btab.on { color: var(--green); }
+    .btab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .btab span { font-size: 10px; font-weight: 500; }
+
+    /* CONTENT */
+    .content { padding: 16px 16px 90px; max-width: 600px; margin: 0 auto; }
+    .page { display: none; }
+    .page.on { display: block; }
+
+    /* SECTION LABEL */
+    .sl { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+
+    /* MACRO CARDS */
+    .macro-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 20px; }
+    .mc { padding: 12px 8px; border-radius: var(--radius-sm); text-align: center; }
+    .mc .num { font-size: 20px; font-weight: 600; display: block; margin-bottom: 2px; }
+    .mc .lbl { font-size: 11px; }
+    .mc.kcal { background: var(--green-light); } .mc.kcal .num { color: var(--green-dark); } .mc.kcal .lbl { color: var(--green-mid); }
+    .mc.pro { background: var(--blue-light); } .mc.pro .num, .mc.pro .lbl { color: var(--blue-dark); }
+    .mc.carb { background: var(--amber-light); } .mc.carb .num, .mc.carb .lbl { color: var(--amber-dark); }
+    .mc.fat { background: var(--purple-light); } .mc.fat .num, .mc.fat .lbl { color: var(--purple-dark); }
+
+    /* WEEK GRID */
+    .week-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; margin-bottom: 20px; }
+    .wd { text-align: center; padding: 8px 2px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    .wd .dn { font-size: 9px; font-weight: 500; margin-bottom: 2px; opacity: 0.8; }
+    .wd.upper { background: var(--blue-light); color: var(--blue-dark); }
+    .wd.lower { background: var(--amber-light); color: var(--amber-dark); }
+    .wd.full { background: var(--green-light); color: var(--green-dark); }
+    .wd.rest { background: var(--bg3); color: var(--text2); }
+
+    /* WORKOUT TABS */
+    .day-tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 14px; }
+    .dtab { flex: 1; padding: 10px 4px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text2); font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -0.5px; text-align: center; }
+    .dtab.on { color: var(--green); border-bottom-color: var(--green); }
+    .dpanel { display: none; }
+    .dpanel.on { display: block; }
+
+    /* EXERCISE CARDS */
+    .ec { border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+    .eh { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; cursor: pointer; background: var(--bg2); gap: 8px; }
+    .eh:active { background: var(--bg3); }
+    .en { font-size: 14px; font-weight: 600; color: var(--text); }
+    .em { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .etags { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+    .tg { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+    .tg.s { background: var(--blue-light); color: var(--blue-dark); }
+    .tg.r { background: var(--amber-light); color: var(--amber-dark); }
+    .cv { font-size: 10px; color: var(--text2); transition: transform .2s; display: inline-block; margin-left: 4px; }
+    .cv.on { transform: rotate(180deg); }
+    .eb { display: none; padding: 12px 14px; border-top: 0.5px solid var(--border); font-size: 13px; line-height: 1.6; color: var(--text2); }
+    .eb.on { display: block; }
+    .eb strong { font-weight: 600; color: var(--text); }
+
+    /* MEAL CARDS */
+    .meal-card { border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+    .mh { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; cursor: pointer; background: var(--bg2); }
+    .mh:active { background: var(--bg3); }
+    .mn { font-size: 14px; font-weight: 600; color: var(--text); }
+    .mt { font-size: 12px; color: var(--text2); }
+    .mb { display: none; padding: 10px 14px; border-top: 0.5px solid var(--border); }
+    .mb.on { display: block; }
+    .food-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
+    .food-row:last-child { border-bottom: none; }
+    .food-row .fn { color: var(--text); }
+    .food-row .fa { color: var(--text2); font-size: 12px; }
+
+    /* TIPS / RULES */
+    .rule-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .rule-row:last-child { border-bottom: none; }
+    .rn { width: 24px; height: 24px; border-radius: 50%; background: var(--green-light); color: var(--green-dark); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rt { font-size: 13px; color: var(--text); line-height: 1.5; }
+    .rt strong { font-weight: 600; }
+    .rs { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    .tip { background: var(--green-light); border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 14px; font-size: 13px; color: var(--green-dark); line-height: 1.5; }
+    .tip strong { font-weight: 600; }
+
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--green-light); color: var(--green-dark); margin-bottom: 12px; }
+
+    .dh { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+    .dt { font-size: 15px; font-weight: 600; color: var(--text); }
+    .dm { font-size: 12px; color: var(--text2); }
+
+    /* PROGRESS PAGE */
+    .prog-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+    .prog-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+    .input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .input-row label { font-size: 13px; color: var(--text2); flex: 1; }
+    .input-row input { width: 80px; padding: 7px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); text-align: right; }
+    .save-btn { width: 100%; padding: 12px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 4px; }
+    .save-btn:active { background: var(--green-mid); }
+    .log-entry { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry .ld { color: var(--text2); }
+    .log-entry .lv { font-weight: 600; color: var(--text); }
+    .empty { font-size: 13px; color: var(--text2); text-align: center; padding: 20px 0; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <div class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M3 8h3M18 8h3M3 16h3M18 16h3M6 12h12"/></svg>
+    </div>
+    <div>
+      <div class="nav-title">Fit Plan</div>
+      <div class="nav-sub">Bryan · Body recomposition</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- WORKOUT PAGE -->
+  <div class="page on" id="pg-workout">
+    <div class="sl" style="margin-bottom:10px">Weekly schedule</div>
+    <div class="week-grid">
+      <div class="wd upper"><div class="dn">Mon</div>Upper</div>
+      <div class="wd rest"><div class="dn">Tue</div>Rest</div>
+      <div class="wd lower"><div class="dn">Wed</div>Lower</div>
+      <div class="wd rest"><div class="dn">Thu</div>Rest</div>
+      <div class="wd full"><div class="dn">Fri</div>Full</div>
+      <div class="wd rest"><div class="dn">Sat</div>Rest</div>
+      <div class="wd rest"><div class="dn">Sun</div>Rest</div>
+    </div>
+
+    <div class="tip"><strong>Volume method:</strong> 4 sets per exercise · Stop 2–3 reps short of failure · Max 10 sets per muscle per session · Rest 60–90 sec between sets</div>
+
+    <div class="sl">Workouts</div>
+    <div class="day-tabs">
+      <button class="dtab on" onclick="sw(0)">Mon</button>
+      <button class="dtab" onclick="sw(1)">Wed</button>
+      <button class="dtab" onclick="sw(2)">Fri</button>
+    </div>
+
+    <div class="dpanel on" id="d0">
+      <div class="dh"><div class="dt">Upper body</div><div class="dm">~55–65 min</div></div>
+      <div class="badge">8 sets chest · 8 sets back · 4 sets delts</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Bench press</div><div class="em">Chest — primary push</div></div><div class="etags"><span class="tg s">4 × 8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Stop when you have <strong>2–3 reps left in the tank</strong>. 4 sets here + 4 incline = 8 chest sets today. Add weight when you hit 12 on all 4 sets easily.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Incline dumbbell press</div><div class="em">Upper chest</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 chest sets. Control the negative (3 sec down). Upper chest is underdeveloped in most beginners — don't skip this.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lat pulldown</div><div class="em">Lats — primary pull</div></div><div class="etags"><span class="tg s">4 × 8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Shoulder-width grip, slight lean back. Drive elbows down toward hips. 4 sets here + 4 rows = 8 back sets today.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Machine row</div><div class="em">Upper back + rear delts</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Pronated grip, squeeze 1 sec at top. Completes 8 back sets. Machine is ideal for beginners since the path is fixed.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lateral raises</div><div class="em">Side delts</div></div><div class="etags"><span class="tg s">4 × 12–15</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Cable or dumbbell. Lead with elbows, slight bend. Fastest way to build shoulder width. 4 here + 4 Friday = 8 weekly sets.</div></div>
+    </div>
+
+    <div class="dpanel" id="d1">
+      <div class="dh"><div class="dt">Lower body</div><div class="dm">~55–65 min</div></div>
+      <div class="badge">8 sets quads · 8 sets hamstrings · 4 sets calves</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Barbell squat</div><div class="em">Quads + glutes</div></div><div class="etags"><span class="tg s">4 × 8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Stop 2–3 reps short — <strong>Jeremy specifically recommends this for squats</strong> since true failure on legs tanks recovery. Full depth, knees track over toes.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Leg press</div><div class="em">Quads — supplemental</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 quad sets. Full range — let the sled come close to your chest. Safer than squats for volume since there's no spinal load.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Romanian deadlift</div><div class="em">Hamstrings + glutes</div></div><div class="etags"><span class="tg s">4 × 8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Jeremy's top hamstring exercise. Push hips back, feel the stretch. Keep bar close to your legs. Stop 2–3 short — RDL near failure is risky for the lower back.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lying leg curl</div><div class="em">Hamstrings — isolation</div></div><div class="etags"><span class="tg s">4 × 10–15</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 hamstring sets. Slow negative (3 sec). Safe to push closer to failure here — no spinal load.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Standing calf raise</div><div class="em">Calves</div></div><div class="etags"><span class="tg s">4 × 15–20</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Deep stretch at the bottom, full contraction at top. High reps work best for calves. 4 here + 4 Friday = 8 weekly sets.</div></div>
+    </div>
+
+    <div class="dpanel" id="d2">
+      <div class="dh"><div class="dt">Full body</div><div class="dm">~60–70 min</div></div>
+      <div class="badge">Tops off weekly volume for every muscle</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Overhead press</div><div class="em">Shoulders + triceps</div></div><div class="etags"><span class="tg s">4 × 8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings shoulders to 8 weekly sets (4 lateral Mon + 4 here). Core tight, don't flare elbows.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Pull-up / assisted pull-up</div><div class="em">Lats + biceps</div></div><div class="etags"><span class="tg s">4 × 8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings back to 12 weekly sets (8 Mon + 4 here). Use assisted machine if needed. When you hit 4×12 bodyweight, add a plate.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Hack squat or leg press</div><div class="em">Quads</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings quads to 12 weekly sets (8 Wed + 4 here). Jeremy's top quad pick is the Cybex hack squat — use it if your gym has one.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Dumbbell skull crushers</div><div class="em">Triceps</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Jeremy's top tricep exercise. Elbows stay pointed at ceiling, slow negative. Triceps = 2/3 of arm size.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Cable or dumbbell curl</div><div class="em">Biceps</div></div><div class="etags"><span class="tg s">4 × 10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Full range — all the way down, squeeze at top. Try Bayesian curls (cable behind you) for maximum bicep stretch.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Calf raise</div><div class="em">Calves</div></div><div class="etags"><span class="tg s">4 × 15–20</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings calves to 8 weekly sets (4 Wed + 4 here). Full range every rep — partial reps are almost useless for calves.</div></div>
+    </div>
+  </div>
+
+  <!-- DIET PAGE -->
+  <div class="page" id="pg-diet">
+    <div class="sl">Daily targets</div>
+    <div class="macro-grid">
+      <div class="mc kcal"><span class="num">2,200</span><span class="lbl">calories</span></div>
+      <div class="mc pro"><span class="num">165g</span><span class="lbl">protein</span></div>
+      <div class="mc carb"><span class="num">220g</span><span class="lbl">carbs</span></div>
+      <div class="mc fat"><span class="num">65g</span><span class="lbl">fats</span></div>
+    </div>
+
+    <div class="tip"><strong>Recomp hack:</strong> ~200 kcal below maintenance on rest days (2,000 kcal). Closer to maintenance on training days (2,200 kcal). Calorie cycling per Jeremy Ethier.</div>
+
+    <div class="sl">Jeremy Ethier's 5 rules</div>
+    <div style="margin-bottom:20px">
+      <div class="rule-row"><div class="rn">1</div><div class="rt"><strong>Hit protein first — everything else is secondary.</strong><div class="rs">~165g/day. Protein protects muscle while cutting fat.</div></div></div>
+      <div class="rule-row"><div class="rn">2</div><div class="rt"><strong>Eat the same 3–4 meals on repeat.</strong><div class="rs">Decision fatigue kills consistency. Rotate weekly if bored.</div></div></div>
+      <div class="rule-row"><div class="rn">3</div><div class="rt"><strong>Whole foods 80% of the time.</strong><div class="rs">20% flexible. Rigid diets fail. Flexible ones stick.</div></div></div>
+      <div class="rule-row"><div class="rn">4</div><div class="rt"><strong>Time carbs around workouts.</strong><div class="rs">Most carbs before/after training. Better performance + recovery.</div></div></div>
+      <div class="rule-row"><div class="rn">5</div><div class="rt"><strong>Track for 2 weeks, then go by feel.</strong><div class="rs">Build awareness once — you won't need to track forever.</div></div></div>
+    </div>
+
+    <div class="sl">Daily meal plan</div>
+    <div class="meal-card"><div class="mh" onclick="tm(this)"><div><div class="mn">Breakfast</div><div class="mt">7–8 AM · 40g P · 50g C</div></div><span class="cv">▾</span></div><div class="mb"><div class="food-row"><span class="fn">Greek yogurt (2% Fage)</span><span class="fa">200g</span></div><div class="food-row"><span class="fn">Rolled oats (dry)</span><span class="fa">80g</span></div><div class="food-row"><span class="fn">Whole eggs</span><span class="fa">2 eggs</span></div><div class="food-row"><span class="fn">Banana</span><span class="fa">1 medium</span></div></div></div>
+    <div class="meal-card"><div class="mh" onclick="tm(this)"><div><div class="mn">Pre-workout lunch</div><div class="mt">12–1 PM · 45g P · 70g C</div></div><span class="cv">▾</span></div><div class="mb"><div class="food-row"><span class="fn">Chicken breast</span><span class="fa">150g cooked</span></div><div class="food-row"><span class="fn">White rice</span><span class="fa">180g cooked</span></div><div class="food-row"><span class="fn">Broccoli or mixed veg</span><span class="fa">1 cup</span></div><div class="food-row"><span class="fn">Olive oil drizzle</span><span class="fa">1 tsp</span></div></div></div>
+    <div class="meal-card"><div class="mh" onclick="tm(this)"><div><div class="mn">Post-workout shake</div><div class="mt">Within 60 min · 30g P · 30g C</div></div><span class="cv">▾</span></div><div class="mb"><div class="food-row"><span class="fn">Whey protein</span><span class="fa">1 scoop</span></div><div class="food-row"><span class="fn">Whole milk or oat milk</span><span class="fa">300ml</span></div><div class="food-row"><span class="fn">Frozen berries</span><span class="fa">½ cup</span></div></div></div>
+    <div class="meal-card"><div class="mh" onclick="tm(this)"><div><div class="mn">Dinner</div><div class="mt">7–8 PM · 50g P · 50g C</div></div><span class="cv">▾</span></div><div class="mb"><div class="food-row"><span class="fn">Salmon or lean ground beef</span><span class="fa">180g cooked</span></div><div class="food-row"><span class="fn">Sweet potato or pasta</span><span class="fa">150g cooked</span></div><div class="food-row"><span class="fn">Leafy greens or salad</span><span class="fa">large handful</span></div></div></div>
+  </div>
+
+  <!-- PROGRESS PAGE -->
+  <div class="page" id="pg-progress">
+    <div class="sl">Log your weight</div>
+    <div class="prog-card">
+      <h3>Today's weigh-in</h3>
+      <div class="input-row"><label>Weight (lbs)</label><input type="number" id="weight-input" placeholder="149" step="0.1"></div>
+      <button class="save-btn" onclick="saveWeight()">Save entry</button>
+    </div>
+
+    <div class="sl">Weight log</div>
+    <div class="prog-card">
+      <div id="weight-log"><div class="empty">No entries yet. Log your first weigh-in above.</div></div>
+    </div>
+
+    <div class="sl" style="margin-top:16px">Goal reminder</div>
+    <div class="tip">
+      <strong>Recomp target:</strong> Lose ~0.75 lbs/week (0.5% of 149 lbs). The scale may barely move — that's normal. Fat is dropping, muscle is building. Trust the process for 12+ weeks.
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <button class="btab on" onclick="nav('workout',this)">
+    <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M3 8h3M18 8h3M3 16h3M18 16h3M6 12h12"/></svg>
+    <span>Workout</span>
+  </button>
+  <button class="btab" onclick="nav('diet',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <span>Diet</span>
+  </button>
+  <button class="btab" onclick="nav('progress',this)">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Progress</span>
+  </button>
+</div>
+
+<script>
+function nav(pg, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.btab').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + pg).classList.add('on');
+  el.classList.add('on');
+}
+function sw(i) {
+  document.querySelectorAll('.dtab').forEach((t,j) => t.classList.toggle('on', i===j));
+  document.querySelectorAll('.dpanel').forEach((p,j) => p.classList.toggle('on', i===j));
+}
+function tg(el) {
+  el.nextElementSibling.classList.toggle('on');
+  el.querySelector('.cv').classList.toggle('on');
+}
+function tm(el) {
+  el.nextElementSibling.classList.toggle('on');
+  el.querySelector('.cv').classList.toggle('on');
+}
+function saveWeight() {
+  const val = document.getElementById('weight-input').value;
+  if (!val) return;
+  const log = JSON.parse(localStorage.getItem('weightLog') || '[]');
+  const today = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  log.unshift({ date: today, weight: parseFloat(val).toFixed(1) });
+  localStorage.setItem('weightLog', JSON.stringify(log.slice(0, 30)));
+  document.getElementById('weight-input').value = '';
+  renderLog();
+}
+function renderLog() {
+  const log = JSON.parse(localStorage.getItem('weightLog') || '[]');
+  const el = document.getElementById('weight-log');
+  if (!log.length) { el.innerHTML = '<div class="empty">No entries yet. Log your first weigh-in above.</div>'; return; }
+  el.innerHTML = log.map(e => `<div class="log-entry"><span class="ld">${e.date}</span><span class="lv">${e.weight} lbs</span></div>`).join('');
+}
+renderLog();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
