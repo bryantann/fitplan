@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fit Plan">
+  <meta name="theme-color" content="#1D9E75">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Fit Plan</title>
+  <style>
+    :root{--green:#1D9E75;--green-l:#E1F5EE;--green-d:#085041;--green-m:#0F6E56;--blue-l:#E6F1FB;--blue-d:#0C447C;--amber-l:#FAEEDA;--amber-d:#633806;--purple-l:#EEEDFE;--purple-d:#3C3489;--coral-l:#FAECE7;--coral-d:#993C1D;--bg:#fff;--bg2:#f7f7f5;--bg3:#f0eeea;--text:#1a1a1a;--text2:#6b6b6b;--border:rgba(0,0,0,0.1);--r:12px;--rs:8px}
+    @media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#999;--border:rgba(255,255,255,0.12);--green-l:#0a3d2a;--green-d:#5DCAA5;--blue-l:#0a1e3a;--blue-d:#85B7EB;--amber-l:#2e1f05;--amber-d:#EF9F27;--purple-l:#1a1a3a;--purple-d:#AFA9EC;--coral-l:#2e1005;--coral-d:#F0997B}}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif}
+    .nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:0.5px solid var(--border);padding-top:env(safe-area-inset-top)}
+    .nav-inner{display:flex;align-items:center;gap:10px;padding:14px 16px}
+    .nav-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nav-icon svg{width:18px;height:18px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round}
+    .nav-title{font-size:17px;font-weight:600}
+    .nav-sub{font-size:12px;color:var(--text2)}
+    .btabs{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:0.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+    .bt{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;border:none;background:none;color:var(--text2);font-family:inherit;gap:3px}
+    .bt.on{color:var(--green)}
+    .bt svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .bt span{font-size:10px;font-weight:500}
+    .content{padding:16px 16px 90px;max-width:600px;margin:0 auto}
+    .page{display:none}.page.on{display:block}
+    .sl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:10px}
+    .mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+    .mc{padding:10px 6px;border-radius:var(--rs);text-align:center}
+    .mc .num{font-size:17px;font-weight:600;display:block;margin-bottom:2px}
+    .mc .lbl{font-size:10px}
+    .mc.kcal{background:var(--green-l)}.mc.kcal .num{color:var(--green-d)}.mc.kcal .lbl{color:var(--green-m)}
+    .mc.pro{background:var(--blue-l)}.mc.pro .num,.mc.pro .lbl{color:var(--blue-d)}
+    .mc.carb{background:var(--amber-l)}.mc.carb .num,.mc.carb .lbl{color:var(--amber-d)}
+    .mc.fat{background:var(--purple-l)}.mc.fat .num,.mc.fat .lbl{color:var(--purple-d)}
+    .ptable{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px}
+    .ptable th{background:var(--blue-l);color:var(--blue-d);padding:8px 10px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+    .ptable td{padding:8px 10px;border-bottom:0.5px solid var(--border);color:var(--text)}
+    .ptable tr:last-child td{border-bottom:none}
+    .pbadge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;white-space:nowrap}
+    .pbadge.min{background:var(--green-l);color:var(--green-d)}
+    .pbadge.good{background:var(--blue-l);color:var(--blue-d)}
+    .pbadge.opt{background:var(--purple-l);color:var(--purple-d)}
+    .pbadge.you{background:var(--green);color:#fff}
+    .msec{margin-bottom:20px}
+    .msec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .msec-title{font-size:14px;font-weight:600}
+    .msec-time{font-size:12px;color:var(--text2)}
+    .scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .scroll::-webkit-scrollbar{display:none}
+    .ocard{flex-shrink:0;width:160px;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer}
+    .ocard.on{border:2px solid var(--green)}
+    .otag{font-size:10px;font-weight:600;padding:3px 10px}
+    .otag.asian{background:var(--amber-l);color:var(--amber-d)}
+    .otag.western{background:var(--blue-l);color:var(--blue-d)}
+    .otag.both{background:var(--purple-l);color:var(--purple-d)}
+    .obody{padding:9px 11px;background:var(--bg2)}
+    .oname{font-size:13px;font-weight:600;margin-bottom:2px}
+    .odesc{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:6px}
+    .opills{display:flex;gap:3px;flex-wrap:wrap}
+    .pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px}
+    .pill.k{background:var(--green-l);color:var(--green-d)}
+    .pill.p{background:var(--blue-l);color:var(--blue-d)}
+    .pill.c{background:var(--amber-l);color:var(--amber-d)}
+    .detail{border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:8px}
+    .det-hd{background:var(--green-l);padding:7px 12px;font-size:12px;font-weight:600;color:var(--green-d)}
+    /* INGREDIENT ROWS — clickable */
+    .frow{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:0.5px solid var(--border);font-size:13px;cursor:pointer;transition:background .1s}
+    .frow:last-child{border-bottom:none}
+    .frow:active{background:var(--bg3)}
+    .frow .fn{color:var(--text);flex:1}
+    .frow .fa{color:var(--text2);font-size:12px;margin-right:6px}
+    .frow .fchev{font-size:9px;color:var(--text2)}
+    .frow.tip{cursor:default}
+    .frow.tip .fn{color:var(--green-d);font-style:italic;font-size:12px}
+    /* INGREDIENT MACRO POPUP */
+    .imacro{display:none;padding:8px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border)}
+    .imacro.on{display:flex;gap:6px;flex-wrap:wrap}
+    .im-pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+    .im-pill.k{background:var(--green-l);color:var(--green-d)}
+    .im-pill.p{background:var(--blue-l);color:var(--blue-d)}
+    .im-pill.c{background:var(--amber-l);color:var(--amber-d)}
+    .im-pill.f{background:var(--purple-l);color:var(--purple-d)}
+    .tap-hint{font-size:11px;color:var(--text2);padding:4px 12px 6px;font-style:italic}
+    .sum{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:20px}
+    .srow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+    .srow:last-child{border-bottom:none}
+    .sl2{color:var(--text2)}.sv{font-weight:600}.sv.good{color:var(--green)}.sv.warn{color:#BA7517}
+    .bwrap{width:60px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+    .bar{height:4px;border-radius:2px}
+    .wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:20px}
+    .wd{text-align:center;padding:8px 2px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+    .wd .dn{font-size:9px;font-weight:500;margin-bottom:2px;opacity:.8}
+    .wd .ds{font-size:9px;margin-top:3px;font-weight:400;opacity:.85}
+    .wd.upper{background:var(--blue-l);color:var(--blue-d)}
+    .wd.lower{background:var(--amber-l);color:var(--amber-d)}
+    .wd.full{background:var(--green-l);color:var(--green-d)}
+    .wd.run{background:var(--coral-l);color:var(--coral-d)}
+    .wd.casual{background:var(--bg3);color:var(--text2)}
+    .day-detail{border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+    .day-detail-hd{padding:12px 14px;font-size:14px;font-weight:600}
+    .day-detail-hd.upper{background:var(--blue-l);color:var(--blue-d)}
+    .day-detail-hd.lower{background:var(--amber-l);color:var(--amber-d)}
+    .day-detail-hd.full{background:var(--green-l);color:var(--green-d)}
+    .day-detail-hd.run{background:var(--coral-l);color:var(--coral-d)}
+    .day-detail-hd.casual{background:var(--bg3);color:var(--text2)}
+    .day-detail-body{padding:10px 14px;font-size:13px;line-height:1.6;color:var(--text2)}
+    .day-detail-body strong{font-weight:600;color:var(--text)}
+    .tip-banner{background:var(--green-l);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--green-d);line-height:1.5}
+    .tip-banner strong{font-weight:600}
+    .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--green-l);color:var(--green-d);margin-bottom:12px}
+    .dh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+    .dt2{font-size:15px;font-weight:600}.dm{font-size:12px;color:var(--text2)}
+    .dtabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:14px}
+    .dtab{flex:1;padding:9px 4px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-0.5px;text-align:center}
+    .dtab.on{color:var(--green);border-bottom-color:var(--green)}
+    .dpanel{display:none}.dpanel.on{display:block}
+    .ec{border:0.5px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+    .eh{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:var(--bg2);gap:8px}
+    .eh:active{background:var(--bg3)}
+    .en{font-size:14px;font-weight:600}.em{font-size:12px;color:var(--text2);margin-top:1px}
+    .etags{display:flex;gap:5px;align-items:center;flex-shrink:0}
+    .tg{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+    .tg.s{background:var(--blue-l);color:var(--blue-d)}.tg.r{background:var(--amber-l);color:var(--amber-d)}
+    .cv{font-size:10px;color:var(--text2);transition:transform .2s;margin-left:4px;display:inline-block}
+    .cv.on{transform:rotate(180deg)}
+    .eb{display:none;padding:11px 14px;border-top:0.5px solid var(--border);font-size:13px;line-height:1.6;color:var(--text2)}
+    .eb.on{display:block}.eb strong{font-weight:600;color:var(--text)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+    .leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .prog-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px}
+    .prog-card h3{font-size:14px;font-weight:600;margin-bottom:12px}
+    .inp-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .inp-row label{font-size:13px;color:var(--text2);flex:1}
+    .inp-row input{width:90px;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);text-align:right}
+    .save-btn{width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px}
+    .save-btn:active{background:var(--green-m)}
+    .log-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+    .log-row:last-child{border-bottom:none}
+    .log-row .ld{color:var(--text2)}.log-row .lv{font-weight:600}
+    .empty{font-size:13px;color:var(--text2);text-align:center;padding:20px 0}
+  </style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-inner">
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M3 8h3M18 8h3M3 16h3M18 16h3M6 12h12"/></svg></div>
+    <div><div class="nav-title">Fit Plan</div><div class="nav-sub">Bryan · Body recomposition</div></div>
+  </div>
+</div>
+<div class="content">
+
+  <!-- DIET -->
+  <div class="page on" id="pg-diet">
+    <div class="sl">Your protein ranges (149 lbs)</div>
+    <table class="ptable">
+      <tr><th>Level</th><th>g/lb</th><th>Daily target</th><th></th></tr>
+      <tr><td>Almost maximized</td><td>0.55–0.63</td><td>82–94g</td><td><span class="pbadge min">Minimum</span></td></tr>
+      <tr><td>Very likely maximized</td><td>0.64–0.72</td><td>95–107g</td><td><span class="pbadge good">Good</span></td></tr>
+      <tr><td>Definitely maximized</td><td>0.73–1.00</td><td>109–149g</td><td><span class="pbadge opt">Optimal</span></td></tr>
+      <tr><td><strong>Your goal</strong></td><td>1.00</td><td><strong>150g</strong></td><td><span class="pbadge you">Target</span></td></tr>
+    </table>
+    <div class="sl">Daily totals</div>
+    <div class="mgrid">
+      <div class="mc kcal"><span class="num" id="tk">0</span><span class="lbl">/ 2,200 kcal</span></div>
+      <div class="mc pro"><span class="num" id="tp">0g</span><span class="lbl">/ 150g P</span></div>
+      <div class="mc carb"><span class="num" id="tc">0g</span><span class="lbl">carbs</span></div>
+      <div class="mc fat"><span class="num" id="tf">0g</span><span class="lbl">fats</span></div>
+    </div>
+    <div class="sum"><div id="sum-rows"></div></div>
+    <div class="msec">
+      <div class="msec-hd"><div class="msec-title">Breakfast</div><div class="msec-time">7–8 AM</div></div>
+      <div class="scroll" id="b-opts"></div><div id="b-det"></div>
+    </div>
+    <div class="msec">
+      <div class="msec-hd"><div class="msec-title">Lunch</div><div class="msec-time">12–1 PM · pre-workout</div></div>
+      <div class="scroll" id="l-opts"></div><div id="l-det"></div>
+    </div>
+    <div class="msec">
+      <div class="msec-hd"><div class="msec-title">Post-workout</div><div class="msec-time">Within 60 min</div></div>
+      <div class="scroll" id="p-opts"></div><div id="p-det"></div>
+    </div>
+    <div class="msec">
+      <div class="msec-hd"><div class="msec-title">Dinner</div><div class="msec-time">7–8 PM</div></div>
+      <div class="scroll" id="d-opts"></div><div id="d-det"></div>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div class="page" id="pg-workout">
+    <div class="sl">Weekly schedule</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#E6F1FB;border:1px solid #B5D4F4"></div>Lift</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#FAECE7;border:1px solid #F5C4B3"></div>Run + steps</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#f0eeea;border:1px solid #D3D1C7"></div>Steps only</div>
+    </div>
+    <div class="wgrid" id="wgrid"></div>
+    <div id="day-detail-panel"></div>
+    <div class="tip-banner"><strong>NEAT tip:</strong> You're averaging ~5,000 steps/day. Getting to 10,000 on run days burns an extra 200–300 kcal — equivalent to your entire calorie deficit without touching your diet.</div>
+    <div class="sl">Lifting workouts</div>
+    <div class="dtabs">
+      <button class="dtab on" onclick="sw(0)">Mon — Upper</button>
+      <button class="dtab" onclick="sw(1)">Wed — Lower</button>
+      <button class="dtab" onclick="sw(2)">Fri — Full</button>
+    </div>
+    <div class="dpanel on" id="d0">
+      <div class="dh"><div class="dt2">Upper body</div><div class="dm">~55–65 min</div></div>
+      <div class="badge">8 sets chest · 8 sets back · 4 sets delts</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Bench press</div><div class="em">Chest — primary push</div></div><div class="etags"><span class="tg s">4×8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Stop with <strong>2–3 reps left in the tank</strong>. 4 sets here + 4 incline = 8 chest sets today. Add weight when you hit 12 on all 4 sets.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Incline dumbbell press</div><div class="em">Upper chest</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 chest sets. Control the negative (3 sec down). Upper chest is underdeveloped in most beginners.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lat pulldown</div><div class="em">Lats — primary pull</div></div><div class="etags"><span class="tg s">4×8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Shoulder-width grip, slight lean back. Drive elbows down toward hips. 4 sets here + 4 rows = 8 back sets.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Machine row</div><div class="em">Upper back + rear delts</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Pronated grip, squeeze 1 sec at top. Completes 8 back sets. Machine is ideal for beginners.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lateral raises</div><div class="em">Side delts</div></div><div class="etags"><span class="tg s">4×12–15</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Cable or dumbbell. Lead with elbows, slight bend. 4 here + 4 Friday = 8 weekly sets.</div></div>
+    </div>
+    <div class="dpanel" id="d1">
+      <div class="dh"><div class="dt2">Lower body</div><div class="dm">~55–65 min</div></div>
+      <div class="badge">8 sets quads · 8 sets hamstrings · 4 sets calves</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Barbell squat</div><div class="em">Quads + glutes</div></div><div class="etags"><span class="tg s">4×8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Stop 2–3 reps short — <strong>Jeremy recommends this for squats</strong> since true failure on legs tanks recovery.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Leg press</div><div class="em">Quads — supplemental</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 quad sets. Full range — let the sled come close to your chest.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Romanian deadlift</div><div class="em">Hamstrings + glutes</div></div><div class="etags"><span class="tg s">4×8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Jeremy's top hamstring exercise. Push hips back, feel the stretch. Stop 2–3 short — RDL near failure risks lower back.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Lying leg curl</div><div class="em">Hamstrings — isolation</div></div><div class="etags"><span class="tg s">4×10–15</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Completes 8 hamstring sets. Slow negative (3 sec). Safe to push closer to failure here.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Standing calf raise</div><div class="em">Calves</div></div><div class="etags"><span class="tg s">4×15–20</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Deep stretch at bottom, full contraction at top. 4 here + 4 Friday = 8 weekly sets.</div></div>
+    </div>
+    <div class="dpanel" id="d2">
+      <div class="dh"><div class="dt2">Full body</div><div class="dm">~60–70 min</div></div>
+      <div class="badge">Tops off weekly volume for every muscle</div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Overhead press</div><div class="em">Shoulders + triceps</div></div><div class="etags"><span class="tg s">4×8–10</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings shoulders to 8 weekly sets (4 lateral Mon + 4 here). Core tight, don't flare elbows.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Pull-up / assisted pull-up</div><div class="em">Lats + biceps</div></div><div class="etags"><span class="tg s">4×8–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings back to 12 weekly sets. Use assisted machine if needed. When you hit 4x12 bodyweight, add a plate.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Hack squat or leg press</div><div class="em">Quads</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings quads to 12 weekly sets. Jeremy's top quad pick is the Cybex hack squat.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Dumbbell skull crushers</div><div class="em">Triceps</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Jeremy's top tricep exercise. Elbows stay pointed at ceiling, slow negative. Triceps = 2/3 of arm size.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Cable or dumbbell curl</div><div class="em">Biceps</div></div><div class="etags"><span class="tg s">4×10–12</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Full range — all the way down, squeeze at top. Try Bayesian curls for maximum bicep stretch.</div></div>
+      <div class="ec"><div class="eh" onclick="tg(this)"><div><div class="en">Calf raise</div><div class="em">Calves</div></div><div class="etags"><span class="tg s">4×15–20</span><span class="tg r">-2 reps</span><span class="cv">▾</span></div></div><div class="eb">Brings calves to 8 weekly sets. Full range every rep.</div></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="page" id="pg-progress">
+    <div class="sl">Log your weight</div>
+    <div class="prog-card">
+      <h3>Today's weigh-in</h3>
+      <div class="inp-row"><label>Weight (lbs)</label><input type="number" id="w-input" placeholder="149" step="0.1"></div>
+      <button class="save-btn" onclick="saveWeight()">Save entry</button>
+    </div>
+    <div class="sl">Weight log</div>
+    <div class="prog-card"><div id="w-log"><div class="empty">No entries yet.</div></div></div>
+    <div class="tip-banner" style="margin-top:4px"><strong>Recomp target:</strong> Lose ~0.75 lbs/week. Scale may barely move — fat is dropping, muscle is building. Trust the process for 12+ weeks.</div>
+  </div>
+
+</div>
+
+<div class="btabs">
+  <button class="bt on" onclick="nav('diet',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 2-1 3-2 4H10c-1-1-2-2-2-4a4 4 0 0 1 4-4z"/><path d="M8 10h8l1 11H7L8 10z"/></svg>
+    <span>Diet</span>
+  </button>
+  <button class="bt" onclick="nav('workout',this)">
+    <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M3 8h3M18 8h3M3 16h3M18 16h3M6 12h12"/></svg>
+    <span>Workout</span>
+  </button>
+  <button class="bt" onclick="nav('progress',this)">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Progress</span>
+  </button>
+</div>
+
+<script>
+var WEEK=[
+  {day:'Mon',type:'upper',label:'Upper',sub:'Lift'},
+  {day:'Tue',type:'run',label:'Run',sub:'2mi · 10k steps'},
+  {day:'Wed',type:'lower',label:'Lower',sub:'Lift'},
+  {day:'Thu',type:'run',label:'Run',sub:'2mi · 10k steps'},
+  {day:'Fri',type:'full',label:'Full',sub:'Lift'},
+  {day:'Sat',type:'casual',label:'Walk',sub:'10k steps'},
+  {day:'Sun',type:'casual',label:'Walk',sub:'10k steps'}
+];
+var DAY_DETAIL={
+  upper:{cls:'upper',title:'Monday — Upper body lift',body:'<strong>Goal: show up and lift.</strong> No step target today. 5 exercises, 4 sets each, stop 2–3 reps short of failure every set.'},
+  lower:{cls:'lower',title:'Wednesday — Lower body lift',body:'<strong>Goal: show up and lift.</strong> No step target today. Stop short of failure on squats and RDLs especially — legs tank recovery fast.'},
+  full:{cls:'full',title:'Friday — Full body lift',body:'<strong>Goal: show up and lift.</strong> No step target today. This tops off your weekly volume for every muscle (~60–70 min).'},
+  run:{cls:'run',title:'Run day — 2 miles + 10,000 steps',body:'<strong>Run 2 miles at easy pace</strong> — conversational effort. ~4,000 steps from the run + your ~5,000 baseline gets you to 9,000. Top off with normal movement.<br><br><strong>Why easy?</strong> Hard running on rest days competes with lifting recovery. Keep it comfortable.'},
+  casual:{cls:'casual',title:'Weekend — 10,000 steps',body:'<strong>No gym, no run required.</strong> Just move. Walk to get food, take a longer route. 10,000 steps burns ~200–300 extra kcal and keeps NEAT high going into the next week.'}
+};
+
+// MEAL DATABASE — each food item has per-serving macros for ingredient breakdown
+var DB={
+  b:[
+    {name:"Oats + Greek yogurt",style:"both",desc:"Overnight oats. Prep the night before.",kcal:480,pro:38,carb:55,fat:12,
+      foods:[
+        {n:"TJ's rolled oats (dry)",a:"80g",kcal:300,pro:10,carb:54,fat:6},
+        {n:"TJ's nonfat Greek yogurt",a:"1 cup (227g)",kcal:130,pro:23,carb:9,fat:0},
+        {n:"Eggs (boiled)",a:"2 whole",kcal:140,pro:12,carb:1,fat:10},
+        {n:"Banana",a:"1 medium",kcal:90,pro:1,carb:23,fat:0}
+      ],tip:"Mix oats + yogurt night before. Boil eggs Sunday for the week."},
+    {name:"Egg fried rice",style:"asian",desc:"High-protein fried rice. Use leftover rice.",kcal:510,pro:34,carb:58,fat:16,
+      foods:[
+        {n:"Cooked jasmine rice (day-old)",a:"180g",kcal:240,pro:4,carb:52,fat:0},
+        {n:"Eggs",a:"3 whole",kcal:210,pro:18,carb:1,fat:15},
+        {n:"TJ's frozen mixed veg",a:"half cup",kcal:40,pro:2,carb:8,fat:0},
+        {n:"Soy sauce + sesame oil",a:"1 tbsp soy",kcal:20,pro:2,carb:2,fat:1}
+      ],tip:"Day-old rice works best. High heat, fast cook. Under 10 min."},
+    {name:"Eggs + multigrain toast",style:"western",desc:"Scrambled eggs on toast with yogurt.",kcal:450,pro:35,carb:42,fat:15,
+      foods:[
+        {n:"Eggs (scrambled)",a:"3 whole",kcal:210,pro:18,carb:1,fat:15},
+        {n:"TJ's multigrain bread",a:"2 slices",kcal:160,pro:6,carb:28,fat:2},
+        {n:"TJ's nonfat Greek yogurt",a:"half cup",kcal:65,pro:11,carb:5,fat:0},
+        {n:"Banana",a:"1 medium",kcal:90,pro:1,carb:23,fat:0}
+      ],tip:"Add Everything But the Bagel seasoning on the eggs. Under 5 min."},
+    {name:"Greek yogurt + granola bowl",style:"both",desc:"TJ's berry granola as topping only — yogurt is the base.",kcal:460,pro:32,carb:52,fat:11,
+      foods:[
+        {n:"TJ's nonfat Greek yogurt",a:"1.5 cups (340g)",kcal:195,pro:34,carb:13,fat:0},
+        {n:"TJ's berry granola",a:"40g (small handful)",kcal:180,pro:3,carb:28,fat:7},
+        {n:"Banana",a:"1 medium",kcal:90,pro:1,carb:23,fat:0}
+      ],tip:"Granola is a topping, not the base. 40g only — it's dense in calories and low in protein on its own."}
+  ],
+  l:[
+    {name:"Chicken rice bowl",style:"both",desc:"Workhorse meal. Batch cook Sunday.",kcal:520,pro:45,carb:68,fat:10,
+      foods:[
+        {n:"TJ's chicken breast (cooked)",a:"150g",kcal:245,pro:46,carb:0,fat:5},
+        {n:"Jasmine rice (cooked)",a:"180g",kcal:235,pro:4,carb:52,fat:0},
+        {n:"TJ's frozen broccoli",a:"1 cup",kcal:30,pro:2,carb:6,fat:0},
+        {n:"Olive oil",a:"1 tsp",kcal:40,pro:0,carb:0,fat:5}
+      ],tip:"Season chicken with soy + ginger for Asian flavor."},
+    {name:"Ground turkey rice bowl",style:"asian",desc:"Taiwanese lu rou fan style.",kcal:540,pro:46,carb:65,fat:14,
+      foods:[
+        {n:"TJ's ground turkey (cooked)",a:"150g",kcal:200,pro:28,carb:0,fat:10},
+        {n:"Jasmine rice (cooked)",a:"180g",kcal:235,pro:4,carb:52,fat:0},
+        {n:"Soy + garlic + five spice",a:"1.5 tbsp soy",kcal:25,pro:2,carb:3,fat:0},
+        {n:"TJ's frozen bok choy",a:"1 cup",kcal:20,pro:2,carb:3,fat:0}
+      ],tip:"Cook turkey with soy, garlic, pinch of five spice and sugar."},
+    {name:"Ground beef rice bowl",style:"asian",desc:"Korean-style bulgogi ground beef.",kcal:560,pro:44,carb:65,fat:18,
+      foods:[
+        {n:"TJ's lean ground beef 85/15",a:"150g",kcal:260,pro:21,carb:0,fat:18},
+        {n:"Jasmine rice (cooked)",a:"180g",kcal:235,pro:4,carb:52,fat:0},
+        {n:"Soy + sesame oil + garlic",a:"1.5 tbsp",kcal:30,pro:2,carb:3,fat:1},
+        {n:"TJ's frozen edamame",a:"half cup",kcal:60,pro:5,carb:5,fat:2}
+      ],tip:"Soy, sesame oil, garlic, pinch of sugar and ginger. 10 min."},
+    {name:"Hotpot beef noodle bowl",style:"asian",desc:"Sliced beef with noodles in broth.",kcal:530,pro:42,carb:62,fat:14,
+      foods:[
+        {n:"Hotpot beef slices",a:"150g",kcal:250,pro:26,carb:0,fat:16},
+        {n:"Glass or rice noodles",a:"80g dry",kcal:200,pro:1,carb:48,fat:0},
+        {n:"TJ's chicken broth",a:"400ml",kcal:20,pro:2,carb:1,fat:0},
+        {n:"Bok choy or spinach",a:"large handful",kcal:15,pro:2,carb:2,fat:0},
+        {n:"Soy + sesame + chili",a:"to taste",kcal:20,pro:1,carb:2,fat:1}
+      ],tip:"Blanch beef in boiling broth 1-2 min. Paper thin slices cook instantly."},
+    {name:"Sliced pork rice bowl",style:"asian",desc:"Ginger scallion pork over rice.",kcal:540,pro:43,carb:65,fat:15,
+      foods:[
+        {n:"Sliced pork (thin cut)",a:"150g",kcal:250,pro:28,carb:0,fat:15},
+        {n:"Jasmine rice (cooked)",a:"180g",kcal:235,pro:4,carb:52,fat:0},
+        {n:"Ginger + scallion + soy",a:"1.5 tbsp",kcal:20,pro:1,carb:3,fat:0},
+        {n:"TJ's frozen broccoli",a:"1 cup",kcal:30,pro:2,carb:6,fat:0}
+      ],tip:"Marinate in soy, ginger, oyster sauce. Pan fry 3-4 min."}
+  ],
+  p:[
+    {name:"Protein shake (pea/rice blend)",style:"western",desc:"Dairy-free. Better for digestion than whey.",kcal:320,pro:32,carb:32,fat:6,
+      foods:[
+        {n:"Pea + rice protein powder",a:"1 scoop (~35g)",kcal:140,pro:27,carb:4,fat:3},
+        {n:"Oat milk or almond milk",a:"300ml",kcal:120,pro:3,carb:18,fat:4},
+        {n:"TJ's frozen mixed berries",a:"half cup",kcal:40,pro:0,carb:10,fat:0}
+      ],tip:"Transparent Labs Rice & Pea Protein is the top-rated dairy-free option. Mixes clean, no chalk."},
+    {name:"Whey isolate shake",style:"western",desc:"If whey works for you — isolate only, not concentrate.",kcal:320,pro:34,carb:30,fat:5,
+      foods:[
+        {n:"Whey ISOLATE powder",a:"1 scoop (~32g)",kcal:130,pro:28,carb:3,fat:1},
+        {n:"TJ's reduced fat milk",a:"300ml",kcal:150,pro:8,carb:14,fat:5},
+        {n:"TJ's frozen mixed berries",a:"half cup",kcal:40,pro:0,carb:10,fat:0}
+      ],tip:"Use ISOLATE not concentrate — most lactose removed. If you still get bloating, switch to pea/rice blend."},
+    {name:"Greek yogurt + banana",style:"both",desc:"No blender. Fast carbs + protein.",kcal:280,pro:24,carb:38,fat:3,
+      foods:[
+        {n:"TJ's nonfat Greek yogurt",a:"1 cup",kcal:130,pro:23,carb:9,fat:0},
+        {n:"Banana",a:"1 medium",kcal:90,pro:1,carb:23,fat:0},
+        {n:"Honey drizzle",a:"1 tsp",kcal:20,pro:0,carb:5,fat:0}
+      ],tip:"Eat immediately post-workout. Banana gives fast-digesting carbs."},
+    {name:"Rice cake + tuna",style:"both",desc:"Zero prep. Fast carbs + lean protein.",kcal:280,pro:30,carb:28,fat:4,
+      foods:[
+        {n:"TJ's rice cakes",a:"4 cakes",kcal:140,pro:2,carb:28,fat:0},
+        {n:"TJ's albacore tuna (canned)",a:"1 can 142g",kcal:150,pro:33,carb:0,fat:1},
+        {n:"Soy sauce or hot sauce",a:"to taste",kcal:10,pro:1,carb:1,fat:0}
+      ],tip:"No prep. Open can, season, eat with rice cakes."}
+  ],
+  d:[
+    {name:"Baked cod",style:"both",desc:"Super lean. Season any way.",kcal:480,pro:50,carb:42,fat:11,
+      foods:[
+        {n:"TJ's cod fillet",a:"200g",kcal:180,pro:38,carb:0,fat:2},
+        {n:"TJ's sweet potato (roasted)",a:"150g",kcal:130,pro:2,carb:30,fat:0},
+        {n:"TJ's baby arugula",a:"large handful",kcal:10,pro:1,carb:1,fat:0},
+        {n:"Olive oil + lemon",a:"1 tbsp",kcal:120,pro:0,carb:1,fat:14}
+      ],tip:"Everything But the Bagel seasoning. Bake 400F for 12-15 min."},
+    {name:"Miso glazed cod",style:"asian",desc:"Japanese miso cod. Restaurant quality.",kcal:490,pro:50,carb:46,fat:12,
+      foods:[
+        {n:"TJ's cod fillet",a:"200g",kcal:180,pro:38,carb:0,fat:2},
+        {n:"White miso + mirin + soy",a:"2 tbsp miso",kcal:60,pro:3,carb:8,fat:1},
+        {n:"Jasmine rice (cooked)",a:"150g",kcal:195,pro:4,carb:43,fat:0},
+        {n:"Bok choy or spinach",a:"1 cup",kcal:15,pro:2,carb:2,fat:0}
+      ],tip:"Marinate 30 min. Broil 8-10 min. Game changer."},
+    {name:"Salmon teriyaki",style:"asian",desc:"Pan-seared salmon, homemade teriyaki.",kcal:530,pro:46,carb:44,fat:19,
+      foods:[
+        {n:"TJ's Atlantic salmon fillet",a:"180g",kcal:280,pro:38,carb:0,fat:14},
+        {n:"Soy + honey + garlic",a:"2 tbsp soy",kcal:50,pro:2,carb:10,fat:0},
+        {n:"Jasmine or brown rice",a:"150g cooked",kcal:195,pro:4,carb:43,fat:0},
+        {n:"TJ's asparagus or broccoli",a:"1 cup",kcal:30,pro:2,carb:6,fat:0}
+      ],tip:"Skin-down 4 min, flip, add sauce, 2 more min."},
+    {name:"Ground beef bulgogi",style:"asian",desc:"Korean ground beef. 10 min.",kcal:540,pro:44,carb:48,fat:18,
+      foods:[
+        {n:"TJ's lean ground beef 85/15",a:"150g",kcal:260,pro:21,carb:0,fat:18},
+        {n:"Jasmine rice (cooked)",a:"150g",kcal:195,pro:4,carb:43,fat:0},
+        {n:"Soy + sesame + garlic + ginger",a:"2 tbsp",kcal:30,pro:2,carb:3,fat:1},
+        {n:"TJ's frozen edamame",a:"half cup",kcal:60,pro:5,carb:5,fat:2}
+      ],tip:"Soy, sesame oil, garlic, ginger, pinch of sugar. 10 min."},
+    {name:"Soondubu jjigae",style:"asian",desc:"Korean soft tofu stew. High protein, light.",kcal:460,pro:42,carb:32,fat:18,
+      foods:[
+        {n:"TJ's silken or soft tofu",a:"300g",kcal:120,pro:13,carb:3,fat:6},
+        {n:"Ground pork or beef",a:"100g",kcal:180,pro:17,carb:0,fat:12},
+        {n:"Egg",a:"1 whole",kcal:70,pro:6,carb:0,fat:5},
+        {n:"Gochugaru + soy + garlic",a:"1 tbsp gochugaru",kcal:20,pro:1,carb:4,fat:0},
+        {n:"Jasmine rice (cooked, side)",a:"120g",kcal:155,pro:3,carb:34,fat:0},
+        {n:"TJ's chicken or anchovy broth",a:"300ml",kcal:15,pro:2,carb:1,fat:0}
+      ],tip:"Simmer broth + gochugaru + garlic, add tofu + meat, crack egg in last 2 min. Serve with rice."},
+    {name:"Pasta with ground beef",style:"western",desc:"Simple beef pasta. Same calories as rice bowl.",kcal:540,pro:44,carb:52,fat:18,
+      foods:[
+        {n:"Pasta (penne or spaghetti, cooked)",a:"150g",kcal:200,pro:7,carb:40,fat:1},
+        {n:"TJ's lean ground beef 85/15",a:"150g",kcal:260,pro:21,carb:0,fat:18},
+        {n:"TJ's tomato marinara or olive oil + garlic",a:"3 tbsp",kcal:60,pro:1,carb:8,fat:3},
+        {n:"TJ's baby spinach (wilted in)",a:"large handful",kcal:10,pro:1,carb:1,fat:0}
+      ],tip:"150g cooked pasta = same calories as 150g rice. Easy swap. Add spinach directly into the pan."},
+    {name:"Turkey lettuce wraps",style:"asian",desc:"Light hoisin turkey wraps.",kcal:470,pro:44,carb:34,fat:14,
+      foods:[
+        {n:"TJ's ground turkey (cooked)",a:"180g",kcal:240,pro:34,carb:0,fat:11},
+        {n:"Butter lettuce leaves",a:"4-5 large",kcal:10,pro:1,carb:1,fat:0},
+        {n:"Jasmine rice (cooked)",a:"120g",kcal:155,pro:3,carb:34,fat:0},
+        {n:"Hoisin + soy + garlic",a:"2 tbsp hoisin",kcal:70,pro:1,carb:14,fat:1}
+      ],tip:"Cook turkey with hoisin + soy + garlic. Spoon into lettuce cups with rice."},
+    {name:"Chicken thigh rice bowl",style:"asian",desc:"Juicy thighs, more flavor than breast.",kcal:550,pro:44,carb:52,fat:18,
+      foods:[
+        {n:"TJ's chicken thighs (boneless, cooked)",a:"160g",kcal:300,pro:33,carb:0,fat:18},
+        {n:"Jasmine rice (cooked)",a:"160g",kcal:210,pro:4,carb:46,fat:0},
+        {n:"Soy + garlic + ginger",a:"2 tbsp",kcal:25,pro:2,carb:3,fat:0},
+        {n:"TJ's frozen broccoli",a:"1 cup",kcal:30,pro:2,carb:6,fat:0}
+      ],tip:"Pan fry skin-down 5 min, flip 4 min. Stays juicy even if slightly overcooked."}
+  ]
+};
+
+var keys=['b','l','p','d'];
+var sel={b:0,l:0,p:0,d:0};
+
+function renderMeals(k){
+  var opts=document.getElementById(k+'-opts');
+  var det=document.getElementById(k+'-det');
+  opts.innerHTML='';
+  DB[k].forEach(function(m,i){
+    var c=document.createElement('div');
+    c.className='ocard'+(sel[k]===i?' on':'');
+    var sl=m.style==='asian'?'Asian':m.style==='western'?'Western':'Both';
+    c.innerHTML='<div class="otag '+m.style+'">'+sl+'</div><div class="obody"><div class="oname">'+m.name+'</div><div class="odesc">'+m.desc+'</div><div class="opills"><span class="pill k">'+m.kcal+'kcal</span><span class="pill p">'+m.pro+'gP</span><span class="pill c">'+m.carb+'gC</span></div></div>';
+    c.onclick=function(){sel[k]=i;renderMeals(k);update();};
+    opts.appendChild(c);
+  });
+  renderDetail(k);
+}
+
+function renderDetail(k){
+  var det=document.getElementById(k+'-det');
+  var m=DB[k][sel[k]];
+  var foodsHtml=m.foods.map(function(f,fi){
+    return '<div class="frow" onclick="toggleIngredient(this)" data-k="'+k+'" data-mi="'+sel[k]+'" data-fi="'+fi+'"><span class="fn">'+f.n+'</span><span class="fa">'+f.a+'</span><span class="fchev">▾</span></div>'+
+    '<div class="imacro" id="im-'+k+'-'+sel[k]+'-'+fi+'">'+
+    '<span class="im-pill k">'+f.kcal+' kcal</span>'+
+    '<span class="im-pill p">'+f.pro+'g protein</span>'+
+    '<span class="im-pill c">'+f.carb+'g carbs</span>'+
+    '<span class="im-pill f">'+f.fat+'g fat</span>'+
+    '</div>';
+  }).join('');
+  det.innerHTML='<div class="detail"><div class="det-hd">'+m.name+'</div><div class="tap-hint">Tap an ingredient to see its macros</div>'+foodsHtml+'<div class="frow tip"><span class="fn">'+m.tip+'</span></div></div>';
+}
+
+function toggleIngredient(el){
+  var id=el.getAttribute('data-k')+'-'+el.getAttribute('data-mi')+'-'+el.getAttribute('data-fi');
+  var panel=document.getElementById('im-'+id);
+  if(!panel)return;
+  var isOpen=panel.classList.contains('on');
+  // close all open panels in this detail
+  var allPanels=el.closest('.detail').querySelectorAll('.imacro');
+  allPanels.forEach(function(p){p.classList.remove('on');});
+  if(!isOpen)panel.classList.add('on');
+}
+
+function update(){
+  var kcal=0,pro=0,carb=0,fat=0;
+  keys.forEach(function(k){var m=DB[k][sel[k]];kcal+=m.kcal;pro+=m.pro;carb+=m.carb;fat+=m.fat;});
+  document.getElementById('tk').textContent=kcal;
+  document.getElementById('tp').textContent=pro+'g';
+  document.getElementById('tc').textContent=carb+'g';
+  document.getElementById('tf').textContent=fat+'g';
+  function pct(v,t){return Math.min(Math.round(v/t*100),100);}
+  function bar(v,t,c){return'<span class="bwrap"><span class="bar" style="width:'+pct(v,t)+'%;background:'+c+'"></span></span>';}
+  var status=pro>=150?'Protein maximized':pro>=109?'Protein optimal':'Increase protein';
+  var sc=pro>=109?'good':'warn';
+  document.getElementById('sum-rows').innerHTML=
+    '<div class="srow"><span class="sl2">Calories</span><span>'+bar(kcal,2200,'#1D9E75')+'<span class="sv '+(kcal<1800?'warn':'good')+'">'+kcal+' / 2,200</span></span></div>'+
+    '<div class="srow"><span class="sl2">Protein</span><span>'+bar(pro,150,'#378ADD')+'<span class="sv '+(pro>=109?'good':'warn')+'">'+pro+'g / 150g</span></span></div>'+
+    '<div class="srow"><span class="sl2">Carbs</span><span>'+bar(carb,220,'#BA7517')+'<span class="sv">'+carb+'g</span></span></div>'+
+    '<div class="srow"><span class="sl2">Fats</span><span>'+bar(fat,65,'#7F77DD')+'<span class="sv">'+fat+'g</span></span></div>'+
+    '<div class="srow"><span class="sl2">Status</span><span class="sv '+sc+'">'+status+'</span></div>';
+}
+
+function buildWeekGrid(){
+  var grid=document.getElementById('wgrid');
+  grid.innerHTML='';
+  WEEK.forEach(function(d){
+    var el=document.createElement('div');
+    el.className='wd '+d.type;
+    el.innerHTML='<div class="dn">'+d.day+'</div>'+d.label+'<div class="ds">'+d.sub+'</div>';
+    el.onclick=function(){showDayDetail(d.type);};
+    grid.appendChild(el);
+  });
+}
+
+function showDayDetail(type){
+  var panel=document.getElementById('day-detail-panel');
+  var info=DAY_DETAIL[type];
+  panel.innerHTML='<div class="day-detail"><div class="day-detail-hd '+info.cls+'">'+info.title+'</div><div class="day-detail-body">'+info.body+'</div></div>';
+}
+
+function nav(pg,el){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.bt').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('pg-'+pg).classList.add('on');
+  el.classList.add('on');
+}
+function sw(i){
+  document.querySelectorAll('.dtab').forEach(function(t,j){t.classList.toggle('on',i===j);});
+  document.querySelectorAll('.dpanel').forEach(function(p,j){p.classList.toggle('on',i===j);});
+}
+function tg(el){
+  el.nextElementSibling.classList.toggle('on');
+  el.querySelector('.cv').classList.toggle('on');
+}
+function saveWeight(){
+  var val=document.getElementById('w-input').value;
+  if(!val)return;
+  var log=JSON.parse(localStorage.getItem('wlog')||'[]');
+  var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  log.unshift({date:today,w:parseFloat(val).toFixed(1)});
+  localStorage.setItem('wlog',JSON.stringify(log.slice(0,30)));
+  document.getElementById('w-input').value='';
+  renderLog();
+}
+function renderLog(){
+  var log=JSON.parse(localStorage.getItem('wlog')||'[]');
+  var el=document.getElementById('w-log');
+  if(!log.length){el.innerHTML='<div class="empty">No entries yet.</div>';return;}
+  el.innerHTML=log.map(function(e){return'<div class="log-row"><span class="ld">'+e.date+'</span><span class="lv">'+e.w+' lbs</span></div>';}).join('');
+}
+
+buildWeekGrid();
+keys.forEach(renderMeals);
+update();
+renderLog();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
