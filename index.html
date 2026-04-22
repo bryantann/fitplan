@@ -371,6 +371,13 @@
     </div>
     <div class="log-macro-grid" id="log-macro-grid"></div>
     <div id="log-slots"></div>
+    <div class="sl" style="margin-top:8px">Weight</div>
+    <div class="prog-card" style="margin-bottom:10px">
+      <div class="inp-row"><label>Today's weight (lbs)</label><input type="number" id="w-input-log" placeholder="149" step="0.1"></div>
+      <button class="save-btn" onclick="saveWeightFromLog()">Save weigh-in</button>
+    </div>
+    <div class="prog-card"><div id="w-log-inline"><div class="empty">No entries yet.</div></div></div>
+    <div class="tip-banner" style="margin-top:10px"><strong>Recomp target:</strong> Lose ~0.75 lbs/week. Scale may barely move — fat is dropping, muscle is building. Trust the process for 12+ weeks.</div>
   </div>
 
   <!-- ADD FOOD MODAL -->
@@ -656,21 +663,55 @@ function tg(el){
   el.nextElementSibling.classList.toggle('on');
   el.querySelector('.cv').classList.toggle('on');
 }
-function saveWeight(){
+async function saveWeight(){
   var val=document.getElementById('w-input').value;
   if(!val)return;
-  var log=JSON.parse(localStorage.getItem('wlog')||'[]');
-  var today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  log.unshift({date:today,w:parseFloat(val).toFixed(1)});
-  localStorage.setItem('wlog',JSON.stringify(log.slice(0,30)));
+  var today=new Date().toISOString().slice(0,10);
+  await sbUpsertWeight(today, parseFloat(val));
   document.getElementById('w-input').value='';
-  renderLog();
+  renderWeightLog();
+}
+async function saveWeightFromLog(){
+  var val=document.getElementById('w-input-log').value;
+  if(!val)return;
+  var today=logDateKey(logDayOffset);
+  await sbUpsertWeight(today, parseFloat(val));
+  document.getElementById('w-input-log').value='';
+  renderWeightLog();
+}
+async function sbUpsertWeight(date, weight){
+  // Try insert first, then update if exists
+  var res = await fetch(SUPABASE_URL+'/rest/v1/weight_log', {
+    method:'POST',
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Authorization':'Bearer '+SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Prefer':'resolution=merge-duplicates'
+    },
+    body:JSON.stringify({date:date, weight_lbs:weight})
+  });
+  return res;
+}
+async function renderWeightLog(){
+  var res = await fetch(SUPABASE_URL+'/rest/v1/weight_log?select=*&order=date.desc&limit=30',{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  var rows = await res.json();
+  var html = rows.length ? rows.map(function(r){
+    var d = new Date(r.date+'T00:00:00');
+    var label = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return '<div class="log-row"><span class="ld">'+label+'</span><span class="lv">'+r.weight_lbs+' lbs</span></div>';
+  }).join('') : '<div class="empty">No entries yet.</div>';
+  // Update both weight logs (progress tab + log tab inline)
+  var el1 = document.getElementById('w-log');
+  var el2 = document.getElementById('w-log-inline');
+  if(el1) el1.innerHTML = html;
+  if(el2) el2.innerHTML = html;
 }
 function renderLog(){
-  var log=JSON.parse(localStorage.getItem('wlog')||'[]');
-  var el=document.getElementById('w-log');
-  if(!log.length){el.innerHTML='<div class="empty">No entries yet.</div>';return;}
-  el.innerHTML=log.map(function(e){return'<div class="log-row"><span class="ld">'+e.date+'</span><span class="lv">'+e.w+' lbs</span></div>';}).join('');
+  // old weight renderLog — now just calls renderWeightLog
+  renderWeightLog();
 }
 
 
@@ -969,6 +1010,7 @@ function renderShop() {
 
 
 loadMeals();
+renderWeightLog();
 
 // ── LOG TAB ──────────────────────────────────────────
 var LOG_SLOTS = [
@@ -987,15 +1029,45 @@ function logDateKey(offset) {
   return d.toISOString().slice(0,10); // YYYY-MM-DD
 }
 
-function getLogData(offset) {
-  var key = 'log_' + logDateKey(offset);
-  try { return JSON.parse(localStorage.getItem(key) || '{"p":[],"b":[],"l":[],"d":[]}'); }
-  catch(e) { return {p:[],b:[],l:[],d:[]}; }
+async function getLogData(offset) {
+  var date = logDateKey(offset);
+  var res = await fetch(SUPABASE_URL+'/rest/v1/food_log?select=*&date=eq.'+date+'&order=created_at.asc',{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  var rows = await res.json();
+  var data = {p:[],b:[],l:[],d:[]};
+  rows.forEach(function(r){
+    data[r.slot].push({id:r.id, name:r.food_name, kcal:r.kcal, pro:r.protein, carb:r.carbs, fat:r.fat});
+  });
+  return data;
 }
 
-function saveLogData(data, offset) {
-  var key = 'log_' + logDateKey(offset);
-  localStorage.setItem(key, JSON.stringify(data));
+async function saveLogItem(slot, item, offset) {
+  var date = logDateKey(offset);
+  await fetch(SUPABASE_URL+'/rest/v1/food_log',{
+    method:'POST',
+    headers:{
+      'apikey':SUPABASE_KEY,
+      'Authorization':'Bearer '+SUPABASE_KEY,
+      'Content-Type':'application/json',
+      'Prefer':'return=minimal'
+    },
+    body:JSON.stringify({
+      date:date, slot:slot,
+      food_name:item.name,
+      kcal:item.kcal,
+      protein:item.pro,
+      carbs:item.carb,
+      fat:item.fat
+    })
+  });
+}
+
+async function deleteLogItemFromDB(id) {
+  await fetch(SUPABASE_URL+'/rest/v1/food_log?id=eq.'+id,{
+    method:'DELETE',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
 }
 
 function logDayLabel(offset) {
@@ -1056,7 +1128,7 @@ function renderLogSlots(data) {
       html += '<div class="log-item">' +
         '<div><div class="log-item-name">'+item.name+'</div>' +
         '<div class="log-item-macros">'+item.kcal+' kcal · '+item.pro+'g P · '+item.carb+'g C · '+item.fat+'g F</div></div>' +
-        '<button class="log-item-del" onclick="deleteLogItem(\''+slot.key+'\','+idx+')">×</button>' +
+        '<button class="log-item-del" onclick="deleteLogItem(\''+slot.key+'\',\''+item.id+'\')">×</button>' +
         '</div>';
     });
     html += '<button class="log-add-btn" onclick="openAddModal(\''+slot.key+'\')">+ Add food</button>';
@@ -1065,17 +1137,16 @@ function renderLogSlots(data) {
   document.getElementById('log-slots').innerHTML = html;
 }
 
-function renderLog() {
+async function renderLog() {
   document.getElementById('log-day-label').textContent = logDayLabel(logDayOffset);
-  var data = getLogData(logDayOffset);
+  var data = await getLogData(logDayOffset);
   renderLogMacroGrid(data);
   renderLogSlots(data);
+  renderWeightLog();
 }
 
-function deleteLogItem(slot, idx) {
-  var data = getLogData(logDayOffset);
-  data[slot].splice(idx, 1);
-  saveLogData(data, logDayOffset);
+async function deleteLogItem(slot, itemId) {
+  await deleteLogItemFromDB(itemId);
   renderLog();
 }
 
@@ -1117,16 +1188,10 @@ function switchModalTab(idx, el) {
   document.querySelectorAll('.modal-panel').forEach(function(p,i){p.classList.toggle('on',i===idx);});
 }
 
-function addMealToLog(meal) {
-  var data = getLogData(logDayOffset);
-  data[currentLogSlot].push({
-    name: meal.name,
-    kcal: meal.kcal,
-    pro: meal.pro,
-    carb: meal.carb,
-    fat: meal.fat
-  });
-  saveLogData(data, logDayOffset);
+async function addMealToLog(meal) {
+  await saveLogItem(currentLogSlot, {
+    name: meal.name, kcal: meal.kcal, pro: meal.pro, carb: meal.carb, fat: meal.fat
+  }, logDayOffset);
   document.getElementById('add-modal').classList.remove('on');
   renderLog();
 }
@@ -1160,18 +1225,16 @@ async function estimateMacros() {
   document.querySelector('.ai-est-btn').disabled = false;
 }
 
-function addCustomFood() {
+async function addCustomFood() {
   var name = document.getElementById('custom-food-name').value.trim();
   if(!name) { alert('Enter a food name.'); return; }
-  var data = getLogData(logDayOffset);
-  data[currentLogSlot].push({
+  await saveLogItem(currentLogSlot, {
     name: name,
     kcal: parseInt(document.getElementById('c-kcal').value)||0,
     pro: parseInt(document.getElementById('c-pro').value)||0,
     carb: parseInt(document.getElementById('c-carb').value)||0,
     fat: parseInt(document.getElementById('c-fat').value)||0
-  });
-  saveLogData(data, logDayOffset);
+  }, logDayOffset);
   document.getElementById('add-modal').classList.remove('on');
   renderLog();
 }
