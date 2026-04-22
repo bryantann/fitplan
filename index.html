@@ -696,7 +696,7 @@ async function renderWeightEntry() {
     var isToday = logDayOffset === 0;
     area.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">' +
       '<div><div style="font-size:15px;font-weight:700;color:var(--green)">'+entry.weight_lbs+' lbs</div>' +
-      '<div style="font-size:11px;color:var(--text2)">'+(isToday?'Today':'This day')+''s weigh-in logged</div></div>' +
+      '<div style="font-size:11px;color:var(--text2)">'+(isToday?'Today':'This day')+'\'s weigh-in logged</div></div>' +
       '<button onclick="removeWeightEntry(\''+entry.id+'\')" style="font-size:12px;color:var(--text2);border:0.5px solid var(--border);background:var(--bg2);border-radius:20px;padding:4px 12px;cursor:pointer;font-family:inherit">Remove</button>' +
       '</div>';
   } else {
