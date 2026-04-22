@@ -1137,18 +1137,16 @@ async function estimateMacros() {
   document.getElementById('ai-status').textContent = 'Estimating...';
   document.querySelector('.ai-est-btn').disabled = true;
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBVEpVCm9-94jKXg_HCEVMsBEVfenjQ6yY', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        system: 'You are a nutrition expert. When given a food description, respond ONLY with a JSON object containing kcal, pro (protein grams), carb (carbs grams), fat (fat grams) as integers. No other text.',
-        messages: [{role:'user', content: 'Estimate macros for: ' + foodName}]
+        contents: [{parts: [{text: 'You are a nutrition expert. Respond ONLY with a JSON object with keys kcal, pro, carb, fat as integers. No other text. Estimate macros for: ' + foodName}]}],
+        generationConfig: {temperature: 0.1}
       })
     });
     var data = await res.json();
-    var text = data.content[0].text.trim();
+    var text = data.candidates[0].content.parts[0].text.trim();
     var clean = text.replace(/```json|```/g,'').trim();
     var macros = JSON.parse(clean);
     document.getElementById('c-kcal').value = macros.kcal || '';
