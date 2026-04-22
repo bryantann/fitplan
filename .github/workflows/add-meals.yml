@@ -1,0 +1,88 @@
+name: Add Meals to Supabase
+
+on:
+  push:
+    paths:
+      - 'meals/pending/*.json'
+
+jobs:
+  insert-meals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install node-fetch@3
+
+      - name: Insert new meals into Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          node << 'EOF'
+          import fetch from 'node-fetch';
+          import fs from 'fs';
+          import path from 'path';
+
+          const SUPABASE_URL = process.env.SUPABASE_URL;
+          const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+          const PENDING_DIR = './meals/pending';
+
+          const files = fs.readdirSync(PENDING_DIR).filter(f => f.endsWith('.json'));
+
+          if (files.length === 0) {
+            console.log('No new meal files found.');
+            process.exit(0);
+          }
+
+          for (const file of files) {
+            const filepath = path.join(PENDING_DIR, file);
+            const meal = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+
+            console.log(`Inserting: ${meal.name}`);
+
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/meals`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+              },
+              body: JSON.stringify(meal)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+              console.error(`Failed to insert ${meal.name}:`, data);
+              process.exit(1);
+            }
+
+            console.log(`✓ Inserted: ${meal.name} (id: ${data[0]?.id})`);
+
+            // Move to /meals/done after successful insert
+            const donePath = filepath.replace('/pending/', '/done/');
+            fs.renameSync(filepath, donePath);
+            console.log(`Moved to done: ${file}`);
+          }
+
+          console.log('All meals inserted successfully.');
+          EOF
+
+      - name: Commit moved files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add meals/
+          git diff --staged --quiet || git commit -m "chore: move inserted meals to done"
+          git push
