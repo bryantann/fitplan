@@ -1,0 +1,19 @@
+{
+  "category": "d",
+  "name": "Chicken katsu rice bowl",
+  "style": "asian",
+  "description": "Japanese panko fried chicken over rice.",
+  "kcal": 540,
+  "protein": 46,
+  "carbs": 58,
+  "fat": 14,
+  "foods": [
+    {"n": "TJ's chicken breast", "a": "160g", "kcal": 265, "pro": 50, "carb": 0, "fat": 5},
+    {"n": "Panko breadcrumbs", "a": "30g", "kcal": 110, "pro": 4, "carb": 22, "fat": 1},
+    {"n": "Egg (for breading)", "a": "1 whole", "kcal": 70, "pro": 6, "carb": 0, "fat": 5},
+    {"n": "Jasmine rice (cooked)", "a": "160g", "kcal": 210, "pro": 4, "carb": 46, "fat": 0},
+    {"n": "TJ's frozen broccoli", "a": "1 cup", "kcal": 30, "pro": 2, "carb": 6, "fat": 0},
+    {"n": "Tonkatsu sauce", "a": "1 tbsp", "kcal": 30, "pro": 0, "carb": 7, "fat": 0}
+  ],
+  "tip": "Pound chicken thin, bread in egg + panko, pan fry 3 min each side. Slice and serve over rice."
+}
