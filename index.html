@@ -162,6 +162,50 @@
     .stag.avoid{background:#FCEBEB;color:#A32D2D}
     .snack-body{display:none;padding:10px 14px;border-top:0.5px solid var(--border);font-size:13px;line-height:1.6;color:var(--text2)}
     .snack-body.on{display:block}
+    /* LOG TAB */
+    .log-slot{margin-bottom:18px}
+    .log-slot-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .log-slot-title{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2)}
+    .log-slot-kcal{font-size:12px;font-weight:600;color:var(--green)}
+    .log-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rs);margin-bottom:6px}
+    .log-item-name{font-size:13px;font-weight:600;color:var(--text);flex:1}
+    .log-item-macros{font-size:11px;color:var(--text2);margin-top:2px}
+    .log-item-del{width:24px;height:24px;border:none;background:none;color:var(--text2);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%}
+    .log-item-del:active{background:var(--bg3)}
+    .log-add-btn{width:100%;padding:10px;border:1.5px dashed var(--border);border-radius:var(--rs);background:none;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-align:center}
+    .log-add-btn:active{background:var(--bg2)}
+    .log-day-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .log-day-btn{width:32px;height:32px;border:0.5px solid var(--border);border-radius:50%;background:var(--bg2);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:none}
+    .log-day-label{font-size:14px;font-weight:600;color:var(--text)}
+    .log-macro-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:20px}
+    .log-macro-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rs);padding:10px 8px}
+    .log-macro-val{font-size:17px;font-weight:700;color:var(--text);display:block;margin-bottom:2px}
+    .log-macro-lbl{font-size:10px;color:var(--text2)}
+    .log-macro-bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+    .log-macro-fill{height:3px;border-radius:2px}
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center}
+    .modal-overlay.on{display:flex}
+    .modal{background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto}
+    .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--text)}
+    .modal-close{float:right;border:none;background:none;font-size:20px;color:var(--text2);cursor:pointer;margin-top:-2px}
+    .modal-tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:14px}
+    .modal-tab{flex:1;padding:8px 4px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-0.5px;text-align:center}
+    .modal-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .modal-panel{display:none}.modal-panel.on{display:block}
+    .meal-pick-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;background:var(--bg2)}
+    .meal-pick-item:active{background:var(--bg3)}
+    .meal-pick-name{font-size:13px;font-weight:600;color:var(--text)}
+    .meal-pick-sub{font-size:11px;color:var(--text2);margin-top:2px}
+    .meal-pick-kcal{font-size:12px;font-weight:700;color:var(--green);flex-shrink:0}
+    .custom-inp{width:100%;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);margin-bottom:10px}
+    .custom-inp:focus{outline:none;border-color:var(--green)}
+    .custom-macro-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+    .custom-macro-inp{padding:10px 8px;border:0.5px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--bg);color:var(--text);width:100%;text-align:center}
+    .custom-macro-lbl{font-size:10px;color:var(--text2);text-align:center;margin-bottom:4px}
+    .ai-est-btn{width:100%;padding:10px;border:0.5px solid var(--green);border-radius:var(--rs);background:var(--green-l);color:var(--green-d);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:10px}
+    .ai-est-btn:active{background:var(--green)}
+    .ai-status{font-size:12px;color:var(--text2);text-align:center;margin-bottom:8px;min-height:18px}
     .shop-meal-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:13px}
     .shop-meal-row:last-child{border-bottom:none}
     .shop-meal-name{font-weight:600;color:var(--text);margin-bottom:2px;font-size:13px}
@@ -318,6 +362,44 @@
     <div id="snack-list"></div>
   </div>
 
+  <!-- LOG -->
+  <div class="page" id="pg-log">
+    <div class="log-day-bar">
+      <button class="log-day-btn" onclick="changeLogDay(-1)">‹</button>
+      <div class="log-day-label" id="log-day-label">Today</div>
+      <button class="log-day-btn" onclick="changeLogDay(1)">›</button>
+    </div>
+    <div class="log-macro-grid" id="log-macro-grid"></div>
+    <div id="log-slots"></div>
+  </div>
+
+  <!-- ADD FOOD MODAL -->
+  <div class="modal-overlay" id="add-modal" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-title">Add food <button class="modal-close" onclick="document.getElementById('add-modal').classList.remove('on')">×</button></div>
+      <div class="modal-tabs">
+        <button class="modal-tab on" onclick="switchModalTab(0,this)">My meals</button>
+        <button class="modal-tab" onclick="switchModalTab(1,this)">Custom</button>
+      </div>
+      <div class="modal-panel on" id="modal-panel-0">
+        <div id="modal-meal-list"></div>
+      </div>
+      <div class="modal-panel" id="modal-panel-1">
+        <input class="custom-inp" id="custom-food-name" placeholder="Food name (e.g. 2 scrambled eggs)" type="text">
+        <button class="ai-est-btn" onclick="estimateMacros()">✦ Estimate macros with AI</button>
+        <div class="ai-status" id="ai-status"></div>
+        <div class="custom-macro-row">
+          <div><div class="custom-macro-lbl">Calories</div><input class="custom-macro-inp" id="c-kcal" type="number" placeholder="0"></div>
+          <div><div class="custom-macro-lbl">Protein</div><input class="custom-macro-inp" id="c-pro" type="number" placeholder="0"></div>
+          <div><div class="custom-macro-lbl">Carbs</div><input class="custom-macro-inp" id="c-carb" type="number" placeholder="0"></div>
+          <div><div class="custom-macro-lbl">Fat</div><input class="custom-macro-inp" id="c-fat" type="number" placeholder="0"></div>
+        </div>
+        <button class="save-btn" onclick="addCustomFood()">Add to log</button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- SHOP -->
   <div class="page" id="pg-shop">
     <div class="tip-banner"><strong>How it works:</strong> Set how many times you'll eat each meal this week. The list below updates automatically with everything you need to buy.</div>
@@ -357,6 +439,10 @@
   <button class="bt" onclick="nav('snacks',this)">
     <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
     <span>Snacks</span>
+  </button>
+  <button class="bt" onclick="nav('log',this)">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <span>Log</span>
   </button>
   <button class="bt" onclick="nav('shop',this)">
     <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -560,6 +646,7 @@ function nav(pg,el){
   document.getElementById('pg-'+pg).classList.add('on');
   el.classList.add('on');
   if(pg==='shop')renderShop();
+  if(pg==='log')renderLog();
 }
 function sw(i){
   document.querySelectorAll('.dtab').forEach(function(t,j){t.classList.toggle('on',i===j);});
@@ -882,6 +969,215 @@ function renderShop() {
 
 
 loadMeals();
+
+// ── LOG TAB ──────────────────────────────────────────
+var LOG_SLOTS = [
+  {key:'p', label:'Pre-workout snack', time:'5:30 AM'},
+  {key:'b', label:'Breakfast', time:'7–7:30 AM'},
+  {key:'l', label:'Lunch', time:'12–1 PM'},
+  {key:'d', label:'Dinner', time:'7–8 PM'}
+];
+var LOG_TARGETS = {kcal:2000, pro:150, carb:220, fat:65};
+var logDayOffset = 0; // 0 = today, -1 = yesterday etc
+var currentLogSlot = 'b';
+
+function logDateKey(offset) {
+  var d = new Date();
+  d.setDate(d.getDate() + (offset || 0));
+  return d.toISOString().slice(0,10); // YYYY-MM-DD
+}
+
+function getLogData(offset) {
+  var key = 'log_' + logDateKey(offset);
+  try { return JSON.parse(localStorage.getItem(key) || '{"p":[],"b":[],"l":[],"d":[]}'); }
+  catch(e) { return {p:[],b:[],l:[],d:[]}; }
+}
+
+function saveLogData(data, offset) {
+  var key = 'log_' + logDateKey(offset);
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function logDayLabel(offset) {
+  if(offset === 0) return 'Today';
+  if(offset === -1) return 'Yesterday';
+  var d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+function changeLogDay(delta) {
+  logDayOffset = Math.min(0, logDayOffset + delta);
+  renderLog();
+}
+
+function renderLogMacroGrid(data) {
+  var totals = {kcal:0, pro:0, carb:0, fat:0};
+  ['p','b','l','d'].forEach(function(slot) {
+    (data[slot]||[]).forEach(function(item) {
+      totals.kcal += item.kcal||0;
+      totals.pro += item.pro||0;
+      totals.carb += item.carb||0;
+      totals.fat += item.fat||0;
+    });
+  });
+  var fields = [
+    {key:'kcal', label:'/ '+LOG_TARGETS.kcal+' kcal', color:'#1D9E75'},
+    {key:'pro',  label:'/ '+LOG_TARGETS.pro+'g protein', color:'#378ADD'},
+    {key:'carb', label:'/ '+LOG_TARGETS.carb+'g carbs', color:'#BA7517'},
+    {key:'fat',  label:'/ '+LOG_TARGETS.fat+'g fat', color:'#7F77DD'}
+  ];
+  var html = '';
+  fields.forEach(function(f) {
+    var val = totals[f.key];
+    var tgt = LOG_TARGETS[f.key];
+    var pct = Math.min(Math.round(val/tgt*100),100);
+    var disp = f.key==='kcal' ? val : val+'g';
+    html += '<div class="log-macro-card">' +
+      '<span class="log-macro-val" style="color:'+f.color+'">'+disp+'</span>' +
+      '<span class="log-macro-lbl">'+f.label+'</span>' +
+      '<div class="log-macro-bar"><div class="log-macro-fill" style="width:'+pct+'%;background:'+f.color+'"></div></div>' +
+      '</div>';
+  });
+  document.getElementById('log-macro-grid').innerHTML = html;
+}
+
+function renderLogSlots(data) {
+  var html = '';
+  LOG_SLOTS.forEach(function(slot) {
+    var items = data[slot.key] || [];
+    var slotKcal = items.reduce(function(s,i){return s+(i.kcal||0);},0);
+    html += '<div class="log-slot">' +
+      '<div class="log-slot-hd">' +
+        '<div><div class="log-slot-title">'+slot.label+'</div><div style="font-size:11px;color:var(--text2)">'+slot.time+'</div></div>' +
+        (slotKcal > 0 ? '<div class="log-slot-kcal">'+slotKcal+' kcal</div>' : '') +
+      '</div>';
+    items.forEach(function(item, idx) {
+      html += '<div class="log-item">' +
+        '<div><div class="log-item-name">'+item.name+'</div>' +
+        '<div class="log-item-macros">'+item.kcal+' kcal · '+item.pro+'g P · '+item.carb+'g C · '+item.fat+'g F</div></div>' +
+        '<button class="log-item-del" onclick="deleteLogItem(\''+slot.key+'\','+idx+')">×</button>' +
+        '</div>';
+    });
+    html += '<button class="log-add-btn" onclick="openAddModal(\''+slot.key+'\')">+ Add food</button>';
+    html += '</div>';
+  });
+  document.getElementById('log-slots').innerHTML = html;
+}
+
+function renderLog() {
+  document.getElementById('log-day-label').textContent = logDayLabel(logDayOffset);
+  var data = getLogData(logDayOffset);
+  renderLogMacroGrid(data);
+  renderLogSlots(data);
+}
+
+function deleteLogItem(slot, idx) {
+  var data = getLogData(logDayOffset);
+  data[slot].splice(idx, 1);
+  saveLogData(data, logDayOffset);
+  renderLog();
+}
+
+function openAddModal(slot) {
+  currentLogSlot = slot;
+  // Reset custom fields
+  document.getElementById('custom-food-name').value = '';
+  document.getElementById('c-kcal').value = '';
+  document.getElementById('c-pro').value = '';
+  document.getElementById('c-carb').value = '';
+  document.getElementById('c-fat').value = '';
+  document.getElementById('ai-status').textContent = '';
+  // Populate my meals list
+  var html = '';
+  var allMeals = [];
+  keys.forEach(function(k) {
+    DB[k].forEach(function(m) {
+      allMeals.push(m);
+    });
+  });
+  allMeals.forEach(function(m) {
+    html += '<div class="meal-pick-item" onclick="addMealToLog('+JSON.stringify(m).replace(/"/g,'&quot;')+')">' +
+      '<div><div class="meal-pick-name">'+m.name+'</div>' +
+      '<div class="meal-pick-sub">'+m.pro+'g protein · '+m.carb+'g carbs · '+m.fat+'g fat</div></div>' +
+      '<div class="meal-pick-kcal">'+m.kcal+' kcal</div>' +
+      '</div>';
+  });
+  document.getElementById('modal-meal-list').innerHTML = html;
+  switchModalTab(0, document.querySelector('.modal-tab'));
+  document.getElementById('add-modal').classList.add('on');
+}
+
+function closeModal(e) {
+  if(e.target.id === 'add-modal') document.getElementById('add-modal').classList.remove('on');
+}
+
+function switchModalTab(idx, el) {
+  document.querySelectorAll('.modal-tab').forEach(function(t,i){t.classList.toggle('on',i===idx);});
+  document.querySelectorAll('.modal-panel').forEach(function(p,i){p.classList.toggle('on',i===idx);});
+}
+
+function addMealToLog(meal) {
+  var data = getLogData(logDayOffset);
+  data[currentLogSlot].push({
+    name: meal.name,
+    kcal: meal.kcal,
+    pro: meal.pro,
+    carb: meal.carb,
+    fat: meal.fat
+  });
+  saveLogData(data, logDayOffset);
+  document.getElementById('add-modal').classList.remove('on');
+  renderLog();
+}
+
+async function estimateMacros() {
+  var foodName = document.getElementById('custom-food-name').value.trim();
+  if(!foodName) { document.getElementById('ai-status').textContent = 'Enter a food name first.'; return; }
+  document.getElementById('ai-status').textContent = 'Estimating...';
+  document.querySelector('.ai-est-btn').disabled = true;
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        system: 'You are a nutrition expert. When given a food description, respond ONLY with a JSON object containing kcal, pro (protein grams), carb (carbs grams), fat (fat grams) as integers. No other text.',
+        messages: [{role:'user', content: 'Estimate macros for: ' + foodName}]
+      })
+    });
+    var data = await res.json();
+    var text = data.content[0].text.trim();
+    var clean = text.replace(/```json|```/g,'').trim();
+    var macros = JSON.parse(clean);
+    document.getElementById('c-kcal').value = macros.kcal || '';
+    document.getElementById('c-pro').value = macros.pro || '';
+    document.getElementById('c-carb').value = macros.carb || '';
+    document.getElementById('c-fat').value = macros.fat || '';
+    document.getElementById('ai-status').textContent = 'Estimated — edit if needed.';
+  } catch(e) {
+    document.getElementById('ai-status').textContent = 'Could not estimate. Enter manually.';
+  }
+  document.querySelector('.ai-est-btn').disabled = false;
+}
+
+function addCustomFood() {
+  var name = document.getElementById('custom-food-name').value.trim();
+  if(!name) { alert('Enter a food name.'); return; }
+  var data = getLogData(logDayOffset);
+  data[currentLogSlot].push({
+    name: name,
+    kcal: parseInt(document.getElementById('c-kcal').value)||0,
+    pro: parseInt(document.getElementById('c-pro').value)||0,
+    carb: parseInt(document.getElementById('c-carb').value)||0,
+    fat: parseInt(document.getElementById('c-fat').value)||0
+  });
+  saveLogData(data, logDayOffset);
+  document.getElementById('add-modal').classList.remove('on');
+  renderLog();
+}
+
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
