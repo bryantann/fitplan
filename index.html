@@ -333,17 +333,7 @@
   </div>
 
   <!-- PROGRESS -->
-  <div class="page" id="pg-progress">
-    <div class="sl">Log your weight</div>
-    <div class="prog-card">
-      <h3>Today's weigh-in</h3>
-      <div class="inp-row"><label>Weight (lbs)</label><input type="number" id="w-input" placeholder="149" step="0.1"></div>
-      <button class="save-btn" onclick="saveWeight()">Save entry</button>
-    </div>
-    <div class="sl">Weight log</div>
-    <div class="prog-card"><div id="w-log"><div class="empty">No entries yet.</div></div></div>
-    <div class="tip-banner" style="margin-top:4px"><strong>Recomp target:</strong> Lose ~0.75 lbs/week. Scale may barely move — fat is dropping, muscle is building. Trust the process for 12+ weeks.</div>
-  </div>
+
 
   <!-- SNACKS -->
   <div class="page" id="pg-snacks">
@@ -371,10 +361,12 @@
     </div>
     <div class="log-macro-grid" id="log-macro-grid"></div>
     <div id="log-slots"></div>
-    <div class="sl" style="margin-top:8px">Weight</div>
-    <div class="prog-card" style="margin-bottom:10px">
-      <div class="inp-row"><label>Today's weight (lbs)</label><input type="number" id="w-input-log" placeholder="149" step="0.1"></div>
-      <button class="save-btn" onclick="saveWeightFromLog()">Save weigh-in</button>
+    <div class="sl" style="margin-top:8px">Weigh-in</div>
+    <div class="prog-card" style="margin-bottom:10px" id="weight-entry-card">
+      <div id="weight-entry-area">
+        <div class="inp-row"><label id="weight-entry-label">Weight (lbs)</label><input type="number" id="w-input-log" placeholder="149" step="0.1"></div>
+        <button class="save-btn" onclick="saveWeightFromLog()">Save weigh-in</button>
+      </div>
     </div>
     <div class="prog-card"><div id="w-log-inline"><div class="empty">No entries yet.</div></div></div>
     <div class="tip-banner" style="margin-top:10px"><strong>Recomp target:</strong> Lose ~0.75 lbs/week. Scale may barely move — fat is dropping, muscle is building. Trust the process for 12+ weeks.</div>
@@ -455,10 +447,7 @@
     <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
     <span>Shop</span>
   </button>
-  <button class="bt" onclick="nav('progress',this)">
-    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <span>Progress</span>
-  </button>
+
 </div>
 
 <script>
@@ -663,25 +652,25 @@ function tg(el){
   el.nextElementSibling.classList.toggle('on');
   el.querySelector('.cv').classList.toggle('on');
 }
-async function saveWeight(){
-  var val=document.getElementById('w-input').value;
-  if(!val)return;
-  var today=new Date().toISOString().slice(0,10);
-  await sbUpsertWeight(today, parseFloat(val));
-  document.getElementById('w-input').value='';
+async function saveWeightFromLog(){
+  var val = document.getElementById('w-input-log').value;
+  if(!val) return;
+  var date = logDateKey(logDayOffset);
+  await sbUpsertWeight(date, parseFloat(val));
+  document.getElementById('w-input-log').value = '';
+  renderWeightEntry();
   renderWeightLog();
 }
-async function saveWeightFromLog(){
-  var val=document.getElementById('w-input-log').value;
-  if(!val)return;
-  var today=logDateKey(logDayOffset);
-  await sbUpsertWeight(today, parseFloat(val));
-  document.getElementById('w-input-log').value='';
+async function deleteWeightEntry(id) {
+  await fetch(SUPABASE_URL+'/rest/v1/weight_log?id=eq.'+id,{
+    method:'DELETE',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  renderWeightEntry();
   renderWeightLog();
 }
 async function sbUpsertWeight(date, weight){
-  // Try insert first, then update if exists
-  var res = await fetch(SUPABASE_URL+'/rest/v1/weight_log', {
+  await fetch(SUPABASE_URL+'/rest/v1/weight_log', {
     method:'POST',
     headers:{
       'apikey':SUPABASE_KEY,
@@ -691,7 +680,32 @@ async function sbUpsertWeight(date, weight){
     },
     body:JSON.stringify({date:date, weight_lbs:weight})
   });
-  return res;
+}
+async function renderWeightEntry() {
+  // Check if there's already an entry for the current log day
+  var date = logDateKey(logDayOffset);
+  var res = await fetch(SUPABASE_URL+'/rest/v1/weight_log?select=*&date=eq.'+date,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+  });
+  var rows = await res.json();
+  var area = document.getElementById('weight-entry-area');
+  var label = document.getElementById('weight-entry-label');
+  if(!area) return;
+  if(rows && rows.length > 0) {
+    var entry = rows[0];
+    var isToday = logDayOffset === 0;
+    area.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">' +
+      '<div><div style="font-size:15px;font-weight:700;color:var(--green)">'+entry.weight_lbs+' lbs</div>' +
+      '<div style="font-size:11px;color:var(--text2)">'+(isToday?'Today':'This day')+''s weigh-in logged</div></div>' +
+      '<button onclick="removeWeightEntry(\''+entry.id+'\')" style="font-size:12px;color:var(--text2);border:0.5px solid var(--border);background:var(--bg2);border-radius:20px;padding:4px 12px;cursor:pointer;font-family:inherit">Remove</button>' +
+      '</div>';
+  } else {
+    area.innerHTML = '<div class="inp-row"><label>Weight (lbs)</label><input type="number" id="w-input-log" placeholder="149" step="0.1"></div>' +
+      '<button class="save-btn" onclick="saveWeightFromLog()">Save weigh-in</button>';
+  }
+}
+async function removeWeightEntry(id) {
+  await deleteWeightEntry(id);
 }
 async function renderWeightLog(){
   var res = await fetch(SUPABASE_URL+'/rest/v1/weight_log?select=*&order=date.desc&limit=30',{
@@ -703,14 +717,10 @@ async function renderWeightLog(){
     var label = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
     return '<div class="log-row"><span class="ld">'+label+'</span><span class="lv">'+r.weight_lbs+' lbs</span></div>';
   }).join('') : '<div class="empty">No entries yet.</div>';
-  // Update both weight logs (progress tab + log tab inline)
-  var el1 = document.getElementById('w-log');
-  var el2 = document.getElementById('w-log-inline');
-  if(el1) el1.innerHTML = html;
-  if(el2) el2.innerHTML = html;
+  var el = document.getElementById('w-log-inline');
+  if(el) el.innerHTML = html;
 }
 function renderLog(){
-  // old weight renderLog — now just calls renderWeightLog
   renderWeightLog();
 }
 
@@ -1011,6 +1021,7 @@ function renderShop() {
 
 loadMeals();
 renderWeightLog();
+renderWeightEntry();
 
 // ── LOG TAB ──────────────────────────────────────────
 var LOG_SLOTS = [
@@ -1143,6 +1154,7 @@ async function renderLog() {
   renderLogMacroGrid(data);
   renderLogSlots(data);
   renderWeightLog();
+  renderWeightEntry();
 }
 
 async function deleteLogItem(slot, itemId) {
