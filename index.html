@@ -1224,7 +1224,7 @@ async function estimateMacros() {
         'Authorization': 'Bearer __GROQ_KEY__'
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.1,
         messages: [
           {role: 'system', content: 'You are a nutrition expert. Respond ONLY with a JSON object with keys kcal, pro, carb, fat as integers. No markdown, no extra text.'},
@@ -1234,6 +1234,7 @@ async function estimateMacros() {
     });
     var data = await res.json();
     if (!res.ok) {
+      console.error('Groq error:', res.status, JSON.stringify(data));
       document.getElementById('ai-status').textContent = 'AI error (' + res.status + ') — enter macros manually.';
       document.querySelector('.ai-est-btn').disabled = false;
       return;
