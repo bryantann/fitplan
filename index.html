@@ -471,8 +471,8 @@ var DAY_DETAIL={
 
 // MEAL DATABASE — each food item has per-serving macros for ingredient breakdown
 // Supabase config
-var SUPABASE_URL = 'https://rvvqypijzuygfbfrllab.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_2X_f0FabdjURdjyQVUdU3Q_oJbKLDYL';
+var SUPABASE_URL = '__SUPABASE_URL__';
+var SUPABASE_KEY = '__SUPABASE_KEY__';
 
 // DB will be populated from Supabase
 var DB = {b:[], l:[], p:[], d:[]};
@@ -1217,26 +1217,28 @@ async function estimateMacros() {
   document.getElementById('ai-status').textContent = 'Estimating...';
   document.querySelector('.ai-est-btn').disabled = true;
   try {
-    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBVEpVCm9-94jKXg_HCEVMsBEVfenjQ6yY', {
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer __GROQ_KEY__'
+      },
       body: JSON.stringify({
-        contents: [{parts: [{text: 'You are a nutrition expert. Respond ONLY with a JSON object with keys kcal, pro, carb, fat as integers. No other text. Estimate macros for: ' + foodName}]}],
-        generationConfig: {temperature: 0.1}
+        model: 'llama3-8b-8192',
+        temperature: 0.1,
+        messages: [
+          {role: 'system', content: 'You are a nutrition expert. Respond ONLY with a JSON object with keys kcal, pro, carb, fat as integers. No markdown, no extra text.'},
+          {role: 'user', content: 'Estimate macros for: ' + foodName}
+        ]
       })
     });
     var data = await res.json();
-    if (res.status === 429) {
-      document.getElementById('ai-status').textContent = 'Rate limit hit — wait 60 sec and try again.';
+    if (!res.ok) {
+      document.getElementById('ai-status').textContent = 'AI error (' + res.status + ') — enter macros manually.';
       document.querySelector('.ai-est-btn').disabled = false;
       return;
     }
-    if (!data.candidates || !data.candidates[0]) {
-      document.getElementById('ai-status').textContent = 'AI unavailable — enter macros manually.';
-      document.querySelector('.ai-est-btn').disabled = false;
-      return;
-    }
-    var text = data.candidates[0].content.parts[0].text.trim();
+    var text = data.choices[0].message.content.trim();
     var clean = text.replace(/```json|```/g,'').trim();
     var macros = JSON.parse(clean);
     document.getElementById('c-kcal').value = macros.kcal || '';
