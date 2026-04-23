@@ -1038,7 +1038,9 @@ var currentLogSlot = 'b';
 function logDateKey(offset) {
   var d = new Date();
   d.setDate(d.getDate() + (offset || 0));
-  return d.toISOString().slice(0,10); // YYYY-MM-DD
+  // Use EST (UTC-5) / EDT (UTC-4) — always use America/New_York
+  var estStr = d.toLocaleDateString('en-CA', {timeZone: 'America/New_York'});
+  return estStr; // returns YYYY-MM-DD in EST
 }
 
 async function getLogData(offset) {
@@ -1215,7 +1217,7 @@ async function estimateMacros() {
   document.getElementById('ai-status').textContent = 'Estimating...';
   document.querySelector('.ai-est-btn').disabled = true;
   try {
-    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBVEpVCm9-94jKXg_HCEVMsBEVfenjQ6yY', {
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBVEpVCm9-94jKXg_HCEVMsBEVfenjQ6yY', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1224,6 +1226,16 @@ async function estimateMacros() {
       })
     });
     var data = await res.json();
+    if (res.status === 429) {
+      document.getElementById('ai-status').textContent = 'Rate limit hit — wait 60 sec and try again.';
+      document.querySelector('.ai-est-btn').disabled = false;
+      return;
+    }
+    if (!data.candidates || !data.candidates[0]) {
+      document.getElementById('ai-status').textContent = 'AI unavailable — enter macros manually.';
+      document.querySelector('.ai-est-btn').disabled = false;
+      return;
+    }
     var text = data.candidates[0].content.parts[0].text.trim();
     var clean = text.replace(/```json|```/g,'').trim();
     var macros = JSON.parse(clean);
