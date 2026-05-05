@@ -163,6 +163,22 @@
     .stag.avoid{background:#FCEBEB;color:#A32D2D}
     .snack-body{display:none;padding:10px 14px;border-top:0.5px solid var(--border);font-size:13px;line-height:1.6;color:var(--text2)}
     .snack-body.on{display:block}
+    /* SCALE RECIPE MODAL */
+    .scale-btn{width:100%;margin:8px 0 0;padding:9px;border:0.5px solid var(--green);border-radius:var(--rs);background:var(--green-l);color:var(--green-d);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:center}
+    .scale-btn:active{background:var(--green);color:#fff}
+    .scale-inp-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+    .scale-inp{flex:1;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--rs);font-size:16px;font-family:inherit;background:var(--bg);color:var(--text)}
+    .scale-inp:focus{outline:none;border-color:var(--green)}
+    .scale-calc-btn{padding:10px 16px;border:none;border-radius:var(--rs);background:var(--green);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+    .scale-result{margin-top:4px}
+    .scale-servings{font-size:13px;font-weight:700;color:var(--green);margin-bottom:12px;padding:8px 12px;background:var(--green-l);border-radius:var(--rs)}
+    .scale-ing-row{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:0.5px solid var(--border);font-size:13px}
+    .scale-ing-row:last-child{border-bottom:none}
+    .scale-ing-name{color:var(--text);flex:1}
+    .scale-ing-amt{font-weight:600;color:var(--green-d)}
+    .scale-step{padding:10px 12px;border-left:3px solid var(--green);margin-bottom:8px;background:var(--bg2);border-radius:0 var(--rs) var(--rs) 0}
+    .scale-step-title{font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+    .scale-step-body{font-size:13px;color:var(--text);line-height:1.5}
     /* LOG TAB */
     .log-slot{margin-bottom:18px}
     .log-slot-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -352,6 +368,20 @@
 
     <div id="snack-list"></div>
   </div>
+
+  <!-- SCALE RECIPE MODAL -->
+  <div class="modal-overlay" id="scale-modal" onclick="closeScaleModal(event)">
+    <div class="modal">
+      <div class="modal-title" id="scale-modal-title">Scale recipe <button class="modal-close" onclick="document.getElementById('scale-modal').classList.remove('on')">×</button></div>
+      <div class="scale-inp-row">
+        <input class="scale-inp" id="scale-lbs-input" type="number" step="0.01" placeholder="e.g. 1.68">
+        <span style="font-size:13px;color:var(--text2);white-space:nowrap">lbs of protein</span>
+        <button class="scale-calc-btn" onclick="calculateScale()">Go</button>
+      </div>
+      <div class="scale-result" id="scale-result"></div>
+    </div>
+  </div>
+
 
   <!-- LOG -->
   <div class="page" id="pg-log">
@@ -579,7 +609,7 @@ function renderDetail(k){
     '<span class="im-pill f">'+f.fat+'g fat</span>'+
     '</div>';
   }).join('');
-  det.innerHTML='<div class="detail">'+multiHtml+'<div class="det-hd">'+m.name+'</div><div class="tap-hint">Tap an ingredient to see its macros</div>'+foodsHtml+'<div class="frow tip"><span class="fn">'+m.tip+'</span></div></div>';
+  det.innerHTML='<div class="detail">'+multiHtml+'<div class="det-hd">'+m.name+'</div><div class="tap-hint">Tap an ingredient to see its macros</div>'+foodsHtml+'<div class="frow tip"><span class="fn">'+m.tip+'</span></div><button class="scale-btn" onclick="openScaleModal(\''+k+'\','+idx+')">⚖ Scale recipe by protein weight</button></div>';
 }
 
 function toggleIngredient(el){
@@ -1265,6 +1295,234 @@ async function addCustomFood() {
   }, logDayOffset);
   document.getElementById('add-modal').classList.remove('on');
   renderLog();
+}
+
+
+// ── SCALE RECIPE ─────────────────────────────────────────
+var currentScaleMeal = null;
+
+// Recipe definitions keyed by meal name
+// base_protein_g: grams of raw protein per serving
+// ingredients: array of {n, ratio (multiplier of protein), unit, fixed (not scaled)}
+// steps: array of {title, body} — use {PROTEIN}, {RICE}, {SERVINGS} as placeholders
+var RECIPES = {
+  'Chicken rice bowl': {
+    base_protein_g: 150,
+    ingredients: [
+      {n:'Chicken breast (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:1.2, unit:'g'},
+      {n:'Frozen broccoli', ratio:0.5, unit:'cup', fixed_per_serving:true},
+      {n:'Soy sauce', ratio:0.02, unit:'tbsp', fixed_per_serving:true},
+      {n:'Sesame oil', ratio:0.005, unit:'tsp', fixed_per_serving:true},
+      {n:'Garlic', ratio:0.005, unit:'cloves', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Marinate', body:'Mix soy sauce, sesame oil, garlic, ginger. Coat {PROTEIN} of chicken. Marinate 15 min minimum.'},
+      {title:'Cook chicken', body:'Pan fry over medium-high 5–6 min per side until 165°F internal. Rest 5 min, then slice or dice.'},
+      {title:'Cook broccoli', body:'Microwave frozen broccoli 3 min or pan fry 2 min.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers — ~{RICE} of rice per container, ~150g cooked chicken each.'}
+    ]
+  },
+  'Ground beef bulgogi': {
+    base_protein_g: 150,
+    ingredients: [
+      {n:'Ground beef 85/15 (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:1.0, unit:'g'},
+      {n:'Soy sauce', ratio:0.02, unit:'tbsp', fixed_per_serving:true},
+      {n:'Sesame oil', ratio:0.007, unit:'tsp', fixed_per_serving:true},
+      {n:'Garlic', ratio:0.005, unit:'cloves', fixed_per_serving:true},
+      {n:'Ginger', ratio:0.003, unit:'tsp', fixed_per_serving:true},
+      {n:'Sugar', ratio:0.005, unit:'tbsp', fixed_per_serving:true},
+      {n:'Frozen edamame', ratio:0.5, unit:'cup', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Make sauce', body:'Mix soy sauce, sesame oil, garlic, ginger, sugar in a bowl.'},
+      {title:'Cook beef', body:'Pan fry {PROTEIN} of ground beef over medium-high, breaking it up. Cook 4–5 min until browned. Drain excess fat.'},
+      {title:'Add sauce', body:'Pour sauce over beef. Cook 2 min until glossy and reduced.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers — rice + beef + edamame each.'}
+    ]
+  },
+  'Chicken teriyaki bowl': {
+    base_protein_g: 160,
+    ingredients: [
+      {n:'Chicken thighs boneless (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:1.0, unit:'g'},
+      {n:'Soy sauce', ratio:0.013, unit:'tbsp', fixed_per_serving:true},
+      {n:'Mirin', ratio:0.013, unit:'tbsp', fixed_per_serving:true},
+      {n:'Frozen broccoli or asparagus', ratio:0.5, unit:'cup', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Make teriyaki sauce', body:'Mix soy sauce, mirin, and a pinch of sugar. Set aside.'},
+      {title:'Sear chicken', body:'Pan fry {PROTEIN} of chicken thighs skin-down 5 min until golden. Flip, pour sauce in, cook 3 min until glossy.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers — rice + sliced chicken + veg each.'}
+    ]
+  },
+  'Salmon teriyaki': {
+    base_protein_g: 180,
+    ingredients: [
+      {n:'Salmon fillet (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:0.89, unit:'g'},
+      {n:'Soy sauce', ratio:0.011, unit:'tbsp', fixed_per_serving:true},
+      {n:'Mirin', ratio:0.011, unit:'tbsp', fixed_per_serving:true},
+      {n:'Honey', ratio:0.003, unit:'tsp', fixed_per_serving:true},
+      {n:'Frozen broccoli or asparagus', ratio:0.5, unit:'cup', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Preheat oven', body:'Preheat to 400°F. Line baking sheet with foil.'},
+      {title:'Make sauce', body:'Mix soy sauce, mirin, honey, garlic.'},
+      {title:'Marinate', body:'Pat {PROTEIN} of salmon dry. Spoon half the sauce over. Let sit 5 min.'},
+      {title:'Bake', body:'Add veg around salmon. Bake 12–14 min. Broil last 2 min for glaze.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers — rice + salmon + veg each.'}
+    ]
+  },
+  'Ground turkey rice bowl': {
+    base_protein_g: 150,
+    ingredients: [
+      {n:'Ground turkey (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:1.2, unit:'g'},
+      {n:'Soy sauce', ratio:0.02, unit:'tbsp', fixed_per_serving:true},
+      {n:'Mirin', ratio:0.013, unit:'tbsp', fixed_per_serving:true},
+      {n:'Garlic', ratio:0.005, unit:'cloves', fixed_per_serving:true},
+      {n:'Ginger', ratio:0.003, unit:'tsp', fixed_per_serving:true},
+      {n:'Sugar', ratio:0.003, unit:'tsp', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Make sauce', body:'Mix soy sauce, mirin, garlic, ginger, sugar.'},
+      {title:'Cook turkey', body:'Pan fry {PROTEIN} of ground turkey over medium-high 4–5 min until just cooked. Don\'t overcook — it dries out fast.'},
+      {title:'Add sauce', body:'Pour sauce over turkey. Cook 2 min until glossy. Add sesame oil off heat.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers — rice + turkey each.'}
+    ]
+  },
+  'Gyudon beef rice bowl': {
+    base_protein_g: 150,
+    ingredients: [
+      {n:'Hotpot beef slices (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Jasmine rice (cooked)', ratio:1.07, unit:'g'},
+      {n:'Onion', ratio:0.002, unit:'medium', fixed_per_serving:true},
+      {n:'Soy sauce', ratio:0.013, unit:'tbsp', fixed_per_serving:true},
+      {n:'Mirin', ratio:0.013, unit:'tbsp', fixed_per_serving:true},
+      {n:'Dashi or chicken broth', ratio:1.0, unit:'ml', fixed_per_serving:true},
+      {n:'Egg', ratio:0.007, unit:'whole', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Simmer broth', body:'Combine dashi/broth, soy sauce, mirin in a pan. Bring to simmer.'},
+      {title:'Cook onion', body:'Add sliced onion. Simmer 5 min until softened.'},
+      {title:'Add beef', body:'Add {PROTEIN} of beef slices. Cook 2 min — they cook fast.'},
+      {title:'Finish', body:'Crack egg on top off heat. Cover 1 min. Serve over rice. Divide into {SERVINGS} bowls.'}
+    ]
+  },
+  'Baked cod': {
+    base_protein_g: 200,
+    ingredients: [
+      {n:'Cod fillet (raw)', ratio:1.0, unit:'g', isProtein:true},
+      {n:'Sweet potato (roasted)', ratio:0.75, unit:'g'},
+      {n:'Olive oil', ratio:0.005, unit:'tbsp', fixed_per_serving:true},
+      {n:'Everything But the Bagel seasoning', ratio:0, unit:'to taste', fixed_per_serving:true}
+    ],
+    steps: [
+      {title:'Preheat oven', body:'Preheat to 400°F.'},
+      {title:'Season', body:'Pat {PROTEIN} of cod dry. Brush with olive oil. Season generously with EBTB seasoning.'},
+      {title:'Bake', body:'Bake 12–15 min until cod flakes easily. Don\'t overbake.'},
+      {title:'Portion', body:'Divide into {SERVINGS} containers with roasted sweet potato.'}
+    ]
+  }
+};
+
+function openScaleModal(k, idx) {
+  var m = DB[k][idx];
+  currentScaleMeal = m;
+  document.getElementById('scale-modal-title').textContent = m.name;
+  document.getElementById('scale-lbs-input').value = '';
+  document.getElementById('scale-result').innerHTML = '';
+  document.getElementById('scale-modal').classList.add('on');
+}
+
+function closeScaleModal(e) {
+  if(e.target.id === 'scale-modal') document.getElementById('scale-modal').classList.remove('on');
+}
+
+function calculateScale() {
+  var lbs = parseFloat(document.getElementById('scale-lbs-input').value);
+  if(!lbs || lbs <= 0) return;
+  var m = currentScaleMeal;
+  if(!m) return;
+
+  var recipe = RECIPES[m.name];
+
+  // If no recipe defined, fall back to simple ingredient scaling from foods array
+  if(!recipe) {
+    var servings = Math.round(lbs * 453.6 / 150);
+    if(servings < 1) servings = 1;
+    var proteinG = Math.round(lbs * 453.6);
+    var html = '<div class="scale-servings">~' + servings + ' servings from ' + lbs + ' lbs</div>';
+    html += '<div class="shop-card" style="margin-bottom:14px">';
+    m.foods.forEach(function(f) {
+      html += '<div class="scale-ing-row"><span class="scale-ing-name">'+f.n+'</span><span class="scale-ing-amt">×'+servings+'</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="sl" style="margin:10px 0 8px">Steps</div>';
+    html += '<div class="scale-step"><div class="scale-step-body">Follow the standard recipe. Multiply all ingredients by '+servings+'.</div></div>';
+    document.getElementById('scale-result').innerHTML = html;
+    return;
+  }
+
+  var proteinG = lbs * 453.6;
+  var servings = Math.round(proteinG / recipe.base_protein_g * 10) / 10;
+  var servingsRounded = Math.max(1, Math.round(servings));
+
+  // Scale each ingredient
+  var html = '<div class="scale-servings">~' + servingsRounded + ' servings from ' + lbs + ' lbs (' + Math.round(proteinG) + 'g)</div>';
+  html += '<div class="shop-card" style="margin-bottom:14px">';
+
+  var scaledIngredients = {};
+  recipe.ingredients.forEach(function(ing) {
+    var amt = proteinG * ing.ratio;
+    var display = '';
+    if(ing.unit === 'g') {
+      if(amt >= 500) display = Math.round(amt) + 'g (' + (amt/453.6).toFixed(2) + ' lbs)';
+      else display = Math.round(amt) + 'g (' + (amt/28.35).toFixed(1) + ' oz)';
+    } else if(ing.unit === 'tbsp') {
+      display = (Math.round(amt * 10)/10) + ' tbsp';
+    } else if(ing.unit === 'tsp') {
+      display = (Math.round(amt * 10)/10) + ' tsp';
+    } else if(ing.unit === 'cup') {
+      amt = ing.ratio * servingsRounded;
+      display = (Math.round(amt * 10)/10) + ' cups';
+    } else if(ing.unit === 'cloves') {
+      amt = Math.ceil(ing.ratio * proteinG);
+      display = amt + ' cloves';
+    } else if(ing.unit === 'medium') {
+      amt = Math.ceil(ing.ratio * proteinG);
+      display = amt + ' medium';
+    } else if(ing.unit === 'whole') {
+      amt = Math.ceil(ing.ratio * proteinG);
+      display = amt + ' eggs';
+    } else if(ing.unit === 'ml') {
+      amt = ing.ratio * servingsRounded * 100;
+      display = Math.round(amt) + 'ml';
+    } else {
+      display = ing.unit;
+    }
+    scaledIngredients[ing.n] = {amt: amt, display: display, unit: ing.unit};
+    html += '<div class="scale-ing-row"><span class="scale-ing-name">'+ing.n+'</span><span class="scale-ing-amt">'+display+'</span></div>';
+  });
+  html += '</div>';
+
+  // Render steps with substituted values
+  var proteinDisplay = Math.round(proteinG) + 'g (' + lbs + ' lbs)';
+  var riceIng = recipe.ingredients.find(function(i){ return i.n.toLowerCase().indexOf('rice') > -1; });
+  var riceDisplay = riceIng ? scaledIngredients[riceIng.n].display : '';
+
+  html += '<div class="sl" style="margin:10px 0 8px">Steps</div>';
+  recipe.steps.forEach(function(step) {
+    var body = step.body
+      .replace(/{PROTEIN}/g, proteinDisplay)
+      .replace(/{RICE}/g, riceDisplay)
+      .replace(/{SERVINGS}/g, servingsRounded);
+    html += '<div class="scale-step"><div class="scale-step-title">'+step.title+'</div><div class="scale-step-body">'+body+'</div></div>';
+  });
+
+  document.getElementById('scale-result').innerHTML = html;
 }
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
